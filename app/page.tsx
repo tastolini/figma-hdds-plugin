@@ -1,168 +1,230 @@
-"use client";
+'use client'
 
-import { figmaAPI } from "@/lib/figmaAPI";
-import { getTextForSelection } from "@/lib/getTextForSelection";
-import { getTextOffset } from "@/lib/getTextOffset";
-import { CompletionRequestBody } from "@/lib/types";
-import { useState } from "react";
-import { z } from "zod";
+import { useChat } from 'ai/react'
+import { useEffect, useRef, useState } from 'react'
 
-// This function calls our API and lets you read each character as it comes in.
-// To change the prompt of our AI, go to `app/api/completion.ts`.
-async function streamAIResponse(body: z.infer<typeof CompletionRequestBody>) {
-  const resp = await fetch("/api/completion", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  const reader = resp.body?.pipeThrough(new TextDecoderStream()).getReader();
-
-  if (!reader) {
-    throw new Error("Error reading response");
-  }
-
-  return reader;
+interface Message {
+  id: string
+  content: string
+  role: 'user' | 'assistant'
 }
 
-export default function Plugin() {
-  const [completion, setCompletion] = useState("");
+interface AutomatorScript {
+  id: string
+  name: string
+  description: string
+  color: string
+  actions: any[]
+  createdAt: number
+}
 
-  // This function calls our API and handles the streaming response.
-  // This ends up building the text up and using React state to update the UI.
-  const onStreamToIFrame = async () => {
-    setCompletion("");
-    const layers = await getTextForSelection();
+// Simple markdown-like formatting
+function formatMessage(content: string): string {
+  return content
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/```([^]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>')
+}
 
-    if (!layers.length) {
-      figmaAPI.run(async (figma) => {
-        figma.notify(
-          "Please select a layer with text in it to generate a poem.",
-          { error: true },
-        );
-      });
-      return;
-    }
-
-    const reader = await streamAIResponse({
-      layers,
-    });
-
-    let text = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
+export default function Home() {
+  const [scriptToExecute, setScriptToExecute] = useState<AutomatorScript | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/chat',
+    onFinish: (message) => {
+      // Try to parse the message as an Automator script
+      try {
+        const possibleScript = JSON.parse(message.content);
+        if (possibleScript.actions && Array.isArray(possibleScript.actions)) {
+          setScriptToExecute(possibleScript);
+        }
+      } catch (e) {
+        // Not a JSON message, ignore
       }
-      text += value;
-      setCompletion(text);
     }
-  };
+  });
 
-  // This is the same as above, but instead of updating React state, it adds the
-  // text to the Figma canvas.
-  const onStreamToCanvas = async () => {
-    const layers = await getTextForSelection();
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
-    if (!layers.length) {
-      figmaAPI.run(async (figma) => {
-        figma.notify(
-          "Please select a layer with text in it to generate a poem.",
-          { error: true },
-        );
-      });
-      return;
+  // Function to check if a string is valid JSON
+  const isJsonString = (str: string) => {
+    try {
+      const json = JSON.parse(str)
+      return json && typeof json === 'object'
+    } catch (e) {
+      return false
     }
+  }
 
-    const reader = await streamAIResponse({
-      layers,
-    });
-
-    let text = "";
-    let nodeID: string | null = null;
-    const textPosition = await getTextOffset();
-
-    const createOrUpdateTextNode = async () => {
-      // figmaAPI.run is a helper that lets us run code in the figma plugin sandbox directly
-      // from the iframe without having to post messages back and forth. For more info,
-      // see /lib/figmaAPI.ts
-      //
-      // It is important to note that any variables that this function closes over must be
-      // specified in the second argument to figmaAPI.run. This is because the code is actually
-      // run in the figma plugin sandbox, not in the iframe.
-      nodeID = await figmaAPI.run(
-        async (figma, { nodeID, text, textPosition }) => {
-          let node = figma.getNodeById(nodeID ?? "");
-
-          // If the node doesn't exist, create it and position it to the right of the selection.
-          if (!node) {
-            node = figma.createText();
-            node.x = textPosition?.x ?? 0;
-            node.y = textPosition?.y ?? 0;
-          }
-
-          if (node.type !== "TEXT") {
-            return "";
-          }
-
-          const oldHeight = node.height;
-
-          await figma.loadFontAsync({ family: "Inter", style: "Medium" });
-          node.fontName = { family: "Inter", style: "Medium" };
-
-          node.characters = text;
-
-          // Scroll and zoom to the node if it's height changed (ex we've added a new line).
-          // We only do this when the height changes to reduce flickering.
-          if (oldHeight !== node.height) {
-            figma.viewport.scrollAndZoomIntoView([node]);
-          }
-
-          return node.id;
+  // Function to execute Automator script
+  const executeAutomatorScript = (script: AutomatorScript) => {
+    // Post message to Figma plugin
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: 'EXECUTE_AUTOMATOR',
+          script,
+          id: script.id,
         },
-        { nodeID, text, textPosition },
-      );
-    };
+      },
+      '*'
+    )
+  }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
+  // Handle messages from Figma plugin
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.pluginMessage) {
+        const { type, error } = event.data.pluginMessage
+        if (type === 'AUTOMATOR_ERROR') {
+          console.error('Automator error:', error)
+          // Handle error (could add to messages or show a notification)
+        } else if (type === 'AUTOMATOR_COMPLETE') {
+          console.log('Automator script completed successfully')
+          // Handle success
+        }
       }
-      text += value;
-      await createOrUpdateTextNode();
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  // Custom submit handler to check for Automator scripts
+  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    handleSubmit(e)
+
+    // Get the last assistant message after a short delay to allow for the response
+    setTimeout(() => {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage?.role === 'assistant' && lastMessage.content) {
+        // Check if the message content is a valid JSON
+        if (isJsonString(lastMessage.content)) {
+          try {
+            const script = JSON.parse(lastMessage.content) as AutomatorScript
+            if (script.actions && Array.isArray(script.actions)) {
+              executeAutomatorScript(script)
+            }
+          } catch (error) {
+            console.error('Failed to parse or execute Automator script:', error)
+          }
+        }
+      }
+    }, 100) // Small delay to ensure the message has been added
+  }
+
+  const executeScript = () => {
+    if (scriptToExecute) {
+      parent.postMessage({ pluginMessage: { 
+        type: 'EXECUTE_AUTOMATOR',
+        script: scriptToExecute,
+        id: Date.now().toString()
+      } }, '*');
+      setScriptToExecute(null);
     }
   };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white">
-      <h1 className="text-4xl font-bold mb-5 mt-2">Poem Generator</h1>
+      <h1 className="text-4xl font-bold mb-5 mt-2">Design System Copilot</h1>
       <div className="text-sm mb-5 text-gray-300">
-        Select a node to create a poem about the text inside of it.
+        Your AI assistant for design system implementation
       </div>
-      <div className="flex flex-row gap-2">
-        <button
-          onClick={onStreamToIFrame}
-          className="mb-5 p-2 px-4 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-        >
-          Generate Poem in iframe
-        </button>
-        <button
-          onClick={onStreamToCanvas}
-          className="mb-5 p-2 px-4 rounded bg-green-600 text-white hover:bg-green-700"
-        >
-          Generate Poem on Canvas
-        </button>
-      </div>
-      {completion && (
-        <div className="border border-gray-600 rounded p-5 bg-gray-800 shadow-lg m-2 text-gray-200">
-          <pre className="whitespace-pre-wrap">
-            <p className="text-md">{completion}</p>
-          </pre>
+
+      <div className="w-full max-w-4xl px-4 mb-24">
+        <div className="flex flex-col space-y-4 mb-4 max-h-[60vh] overflow-y-auto">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.role === 'assistant'
+                  ? 'bg-gray-800'
+                  : 'bg-gray-700'
+              } rounded-lg p-4`}
+            >
+              <div className="flex-1">
+                <div className="font-medium mb-2 flex items-center">
+                  {message.role === 'assistant' ? (
+                    <>
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      Design Copilot
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      You
+                    </>
+                  )}
+                </div>
+                <div 
+                  className="prose prose-invert"
+                  dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                />
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
-      )}
+
+        {scriptToExecute && (
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4">
+            <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+              <div className="font-medium mb-2">Automator Script Ready</div>
+              <p className="text-sm mb-4">A script has been generated to perform your requested actions.</p>
+              <button
+                onClick={executeScript}
+                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-50 transition-colors"
+              >
+                Execute Script
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="fixed bottom-0 left-0 w-full bg-gray-800 p-4">
+          <div className="max-w-4xl mx-auto">
+            <form onSubmit={handleChatSubmit} className="flex flex-col space-y-4">
+              <input
+                className="w-full rounded-md p-4 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={input}
+                placeholder="Ask about design tokens, component architecture, or request Figma actions..."
+                onChange={handleInputChange}
+              />
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`px-6 py-3 rounded-md bg-blue-600 text-white font-medium ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+                  }`}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </div>
+                  ) : (
+                    'Send Message'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
