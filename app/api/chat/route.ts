@@ -1,350 +1,333 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { StreamingTextResponse, Message } from 'ai'
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { StreamingTextResponse, Message } from 'ai';
+import { z } from 'zod';
 
 // Check for API key
 if (!process.env.GOOGLE_API_KEY) {
-  throw new Error('GOOGLE_API_KEY is not set in environment variables')
+  throw new Error('Missing GOOGLE_API_KEY environment variable');
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+const model = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY).getGenerativeModel({ model: 'gemini-pro' });
 
-interface SelectionItem {
-  id: string;
+// Define types
+interface ColorInfo {
   name: string;
-  type: string;
-  width?: number;
-  height?: number;
-  x?: number;
-  y?: number;
-  characters?: string;
-  fontSize?: number | symbol;
-  fontName?: string | { family: string; style: string };
-  componentProperties?: Record<string, any>;
-  childCount?: number;
+  value: string;
+  description?: string;
 }
 
-interface SelectionInfo {
-  count: number;
-  items: SelectionItem[];
-  page: {
-    id: string;
-    name: string;
-    type: string;
-    childCount: number;
+type ColorMode = Record<string, ColorInfo[]>;
+type ColorCollection = Record<string, ColorMode>;
+
+interface DesignSystem {
+  variables?: {
+    colors?: {
+      collections: Record<string, ColorCollection>;
+    };
   };
 }
 
-const systemPrompt = `You are a Design System Copilot, an AI assistant specialized in helping designers and developers implement and maintain design systems in Figma. You have expertise in:
-
-1. Design Tokens and their implementation
-2. Component architecture and best practices
-3. Design system documentation
-4. Accessibility guidelines
-5. Figma best practices and organization
-6. Version control and change management for design systems
-
-When the user requests an action like cloning, creating, or modifying elements in Figma, respond with a valid Automator script in this exact JSON format:
-
-{
-  "id": "script-[timestamp]",
-  "name": "Action Name",
-  "description": "What this script does",
-  "color": "green",
-  "actions": [
-    {
-      "id": "action-[timestamp]",
-      "command": {
-        "name": "commandName",
-        "metadata": {},
-        "title": "Command Title",
-        "description": "Command Description"
-      },
-      "actions": []
-    }
-  ],
-  "createdAt": [timestamp]
+interface SelectionItem {
+  name: string;
+  type: string;
 }
 
-Available commands:
-- cloneFrame: Clones the selected frame
-- createVariant: Creates a new component variant
-- convertToComponent: Converts selection to component
-- setInstanceProperty: Sets component instance property
-- setVariable: Sets variable value
-
-For example, when asked to clone a frame, respond with exactly:
-{
-  "id": "script-1234567890",
-  "name": "Clone Frame",
-  "description": "Clones the selected frame",
-  "color": "green",
-  "actions": [
-    {
-      "id": "action-1234567890",
-      "command": {
-        "name": "cloneFrame",
-        "metadata": {},
-        "title": "Clone Frame",
-        "description": "Creates a copy of the selected frame"
-      },
-      "actions": []
-    }
-  ],
-  "createdAt": 1704464968000
+interface Selection {
+  count: number;
+  items: SelectionItem[];
 }
 
-When asked about the current selection in Figma, analyze the selection data provided and give a clear description of what is selected.
+interface ChatMessage {
+  role: string;
+  content: string;
+}
 
-For other queries, provide clear explanations and best practices in markdown format.`
+// Tool parameter schemas
+const colorInfoSchema = z.object({
+  collectionName: z.string().optional().describe('Specific color collection to query'),
+  modeName: z.string().optional().describe('Specific color mode to query')
+});
+
+const selectionInfoSchema = z.object({});
+
+const executeCommandSchema = z.object({
+  command: z.enum(['cloneFrame', 'createVariant', 'convertToComponent', 'setInstanceProperty', 'setVariable'])
+    .describe('The Figma command to execute'),
+  title: z.string().describe('Title of the command'),
+  description: z.string().describe('Description of what the command will do'),
+  metadata: z.record(z.any()).optional().describe('Additional metadata for the command')
+});
+
+type ColorInfoParams = z.infer<typeof colorInfoSchema>;
+type ExecuteCommandParams = z.infer<typeof executeCommandSchema>;
+
+// Helper function to format color mode output as structured data
+function formatColorMode(mode: string, colors: ColorInfo[]): { mode: string; colors: ColorInfo[] } {
+  return {
+    mode,
+    colors: colors.map(color => ({
+      name: color.name,
+      value: color.value,
+      description: color.description
+    }))
+  };
+}
+
+// Type for tool context
+interface ToolContext {
+  selection?: Selection;
+  designSystem?: DesignSystem;
+}
+
+// Type for tool parameters
+type ToolParams = ColorInfoParams | object | ExecuteCommandParams;
+
+// Type for tool definition
+interface Tool<T extends ToolParams> {
+  description: string;
+  parameters: z.ZodType<T>;
+  function: (params: T, context: ToolContext) => Promise<string>;
+}
+
+// Define tools
+const tools = {
+  getColorInfo: {
+    description: 'Get information about colors in the design system',
+    parameters: colorInfoSchema,
+    function: async (params: ColorInfoParams, { designSystem }: ToolContext) => {
+      const collections = designSystem?.variables?.colors?.collections || {};
+      const result: { collection: string; modes: { mode: string; colors: { name: string; value: string; description?: string }[] }[] }[] = [];
+      
+      if (params.collectionName) {
+        const collection = collections[params.collectionName];
+        if (collection) {
+          const modes: { mode: string; colors: { name: string; value: string; description?: string }[] }[] = [];
+          if (params.modeName && collection[params.modeName]) {
+            const colors = Object.values(collection[params.modeName]).flat();
+            modes.push({
+              mode: params.modeName,
+              colors: colors.map(color => ({
+                name: color.name,
+                value: color.value,
+                description: color.description
+              }))
+            });
+          } else {
+            Object.entries(collection).forEach(([mode, modeColors]) => {
+              const colors = Object.values(modeColors).flat();
+              modes.push({
+                mode,
+                colors: colors.map(color => ({
+                  name: color.name,
+                  value: color.value,
+                  description: color.description
+                }))
+              });
+            });
+          }
+          result.push({ collection: params.collectionName, modes });
+        }
+      } else {
+        Object.entries(collections).forEach(([name, collection]) => {
+          const modes: { mode: string; colors: { name: string; value: string; description?: string }[] }[] = [];
+          Object.entries(collection).forEach(([mode, modeColors]) => {
+            const colors = Object.values(modeColors).flat();
+            modes.push({
+              mode,
+              colors: colors.map(color => ({
+                name: color.name,
+                value: color.value,
+                description: color.description
+              }))
+            });
+          });
+          result.push({ collection: name, modes });
+        });
+      }
+      
+      return JSON.stringify(result.length ? result : { error: 'No color information found in the design system.' });
+    }
+  } satisfies Tool<ColorInfoParams>,
+
+  getSelectionInfo: {
+    description: 'Get information about the current selection in Figma',
+    parameters: selectionInfoSchema,
+    function: async (_: object, { selection }: ToolContext) => {
+      if (!selection || selection.count === 0) {
+        return 'Nothing is currently selected in Figma.';
+      }
+      
+      return `Currently selected:
+- ${selection.count} item(s)
+${selection.items.map(item => `- ${item.name} (${item.type})`).join('\n')}`;
+    }
+  } satisfies Tool<object>,
+
+  executeCommand: {
+    description: 'Execute a Figma command',
+    parameters: executeCommandSchema,
+    function: async (params: ExecuteCommandParams, _: ToolContext) => {
+      const script = {
+        id: `script-${Date.now()}`,
+        name: params.title,
+        description: params.description,
+        color: 'green',
+        actions: [
+          {
+            id: `action-${Date.now()}`,
+            command: {
+              name: params.command,
+              metadata: params.metadata || {},
+              title: params.title,
+              description: params.description
+            },
+            actions: []
+          }
+        ],
+        createdAt: Date.now()
+      };
+      
+      return JSON.stringify(script, null, 2);
+    }
+  } satisfies Tool<ExecuteCommandParams>
+} as const;
+
+// Type for tool names
+type ToolName = keyof typeof tools;
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export async function POST(req: Request) {
   try {
-    try {
-      const { messages, selection }: { messages: Message[], selection: any } = await req.json()
-      if (!messages) {
-        return new Response('Messages are required', { status: 400 })
+    const { messages, selection, designSystem } = await req.json() as {
+      messages: ChatMessage[];
+      selection?: Selection;
+      designSystem?: DesignSystem;
+    };
+    
+    // Map roles to valid Gemini roles
+    const roleMap: Record<string, string> = {
+      user: 'user',
+      assistant: 'model',
+      system: 'user',
+      tool: 'model'
+    };
+
+    // Create chat history with proper role mapping
+    const history = messages.map((msg: ChatMessage) => ({
+      role: roleMap[msg.role] || 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    // Create the chat instance
+    const chat = model.startChat({
+      history,
+      generationConfig: {
+        maxOutputTokens: 4096,
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40
       }
+    });
 
-      const lastMessage = messages[messages.length - 1]
+    const systemMessage = `You are a helpful AI assistant for the HDDS Design System plugin.
+      When users ask about colors:
+      1. Start with a friendly greeting like "I'll show you the colors in our design system."
+      2. Use the getColorInfo function to fetch the color data
+      3. After the data is returned, describe what you found, for example:
+         "Here's a breakdown of our color system, organized by collections and modes. Each color includes its name, value, and a visual preview."
+      
+      Important: Always provide context and natural language responses around the color data.`;
 
-      if (!lastMessage || !lastMessage.content) {
-        return new Response('No message content', { status: 400 })
-      }
+    const result = await chat.sendMessage(systemMessage);
+    const responseText = result.response.text();
 
-      let prompt = lastMessage.content
-      const isActionRequest = prompt.toLowerCase().includes('clone') ||
-                            prompt.toLowerCase().includes('create') ||
-                            prompt.toLowerCase().includes('convert') ||
-                            prompt.toLowerCase().includes('set') ||
-                            prompt.toLowerCase().includes('make')
+    // Get the user's last message
+    const userMessage = messages[messages.length - 1].content.toLowerCase();
 
-      if (isActionRequest) {
-        prompt = `You are a script generator. Generate ONLY a JSON Automator script for this request: "${prompt}"
+    // Check if the user is asking about selection
+    if (userMessage.includes('select') || userMessage.includes('figma')) {
+      return new StreamingTextResponse(
+        new ReadableStream({
+          async start(controller) {
+            // Send initial message
+            controller.enqueue(
+              new TextEncoder().encode(
+                `{"type":"text","content":"Let me show you what's currently selected in Figma:\\n\\n"}\\n`
+              )
+            );
 
-Your response must be ONLY the JSON object, no markdown, no explanation. The JSON must follow this format:
-{
-  "id": "script-${Date.now()}",
-  "name": "Action Name",
-  "description": "What this script does",
-  "color": "green",
-  "actions": [
-    {
-      "id": "action-${Date.now()}",
-      "command": {
-        "name": "commandName",
-        "metadata": {},
-        "title": "Command Title",
-        "description": "Command Description"
-      },
-      "actions": []
-    }
-  ],
-  "createdAt": ${Date.now()}
-}
+            // Send selection component
+            controller.enqueue(
+              new TextEncoder().encode(
+                `{"type":"tool-call","name":"getSelectionInfo","data":{"selection":${JSON.stringify(selection)},"designSystem":${JSON.stringify(designSystem)}}}\\n`
+              )
+            );
 
-Available commands are: cloneFrame, createVariant, convertToComponent, setInstanceProperty, setVariable.
-Replace commandName with one of these exact commands.
-Do not add any text before or after the JSON.`
-      } else if (
-        (prompt.toLowerCase().includes('selected') || 
-         prompt.toLowerCase().includes('selection')) && 
-        selection
-      ) {
-        const { count, items, page } = selection as SelectionInfo;
-        
-        // Create a natural description of the selection
-        let selectionDescription = '';
-        
-        if (count === 0) {
-          selectionDescription = 'Nothing is currently selected in Figma.';
-        } else {
-          selectionDescription = `Currently selected on the "${page.name}" page:\n\n`;
-          
-          items.forEach((item: SelectionItem, index: number) => {
-            selectionDescription += `${index + 1}. ${item.name} (${item.type}):\n`;
-            
-            // Add size and position if available
-            if ('width' in item && 'height' in item && item.width != null && item.height != null) {
-              selectionDescription += `   - Size: ${Math.round(Number(item.width))}px × ${Math.round(Number(item.height))}px\n`;
-            }
-            if ('x' in item && 'y' in item && item.x != null && item.y != null) {
-              selectionDescription += `   - Position: (${Math.round(Number(item.x))}, ${Math.round(Number(item.y))})\n`;
-            }
-            
-            // Add text content for text nodes
-            if (item.type === 'TEXT') {
-              selectionDescription += `   - Text: "${item.characters}"\n`;
-              selectionDescription += `   - Font: ${String(item.fontSize)}px ${
-                typeof item.fontName === 'object' 
-                  ? item.fontName.family 
-                  : String(item.fontName || '')
-              }\n`;
-            }
-            
-            // Add component properties if available
-            if (item.componentProperties) {
-              selectionDescription += '   - Component Properties:\n';
-              Object.entries(item.componentProperties).forEach(([key, value]) => {
-                selectionDescription += `     • ${key}: ${JSON.stringify(value)}\n`;
-              });
-            }
-            
-            // Add child count for containers
-            if ('childCount' in item) {
-              selectionDescription += `   - Contains ${item.childCount} child elements\n`;
-            }
-            
-            selectionDescription += '\n';
-          });
-        }
-
-        prompt = `Here's what is currently selected in Figma:
-
-${selectionDescription}
-
-Please provide a clear, natural language description of the selection, focusing on the most relevant details for the user's context.`
-      }
-
-      // Create chat history with proper role mapping
-      const chatHistory = messages.slice(0, -1).map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }))
-
-      // Add system prompt at the beginning
-      chatHistory.unshift({
-        role: 'model',
-        parts: [{ text: systemPrompt }]
-      })
-
-      // Add current message
-      chatHistory.push({
-        role: 'user',
-        parts: [{ text: prompt }]
-      })
-
-      // Generate response with error handling
-      let response
-      try {
-        response = await model.generateContentStream({
-          contents: chatHistory,
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature: isActionRequest ? 0.1 : 0.7, // Lower temperature for actions
-            topP: 0.8,
-            topK: 40,
-          },
-        })
-      } catch (error) {
-        console.error('Gemini API error:', error)
-        return new Response(
-          JSON.stringify({ error: 'Failed to generate response from Gemini API' }), 
-          { status: 500, headers: { 'Content-Type': 'application/json' }}
-        )
-      }
-
-      // Create a ReadableStream from the response with error handling
-      const stream = new ReadableStream({
-        async start(controller) {
-          const timestamp = Date.now();
-          
-          // If it's an action request, ensure we output clean JSON
-          if (isActionRequest) {
-            try {
-              let fullResponse = '';
-              
-              for await (const chunk of response.stream) {
-                fullResponse += chunk.text();
-              }
-              
-              // Try to extract just the JSON object
-              const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-              if (jsonMatch) {
-                const jsonStr = jsonMatch[0];
-                
-                // Parse and rebuild to ensure valid JSON
-                const parsed = JSON.parse(jsonStr);
-                const cleanJson = {
-                  id: `script-${timestamp}`,
-                  name: parsed.name || "Automator Action",
-                  description: parsed.description || "Executes the requested action",
-                  color: "green",
-                  actions: [{
-                    id: `action-${timestamp}`,
-                    command: {
-                      name: parsed.actions?.[0]?.command?.name || "cloneFrame",
-                      metadata: {},
-                      title: parsed.actions?.[0]?.command?.title || "Execute Action",
-                      description: parsed.actions?.[0]?.command?.description || "Executes the requested action"
-                    },
-                    actions: []
-                  }],
-                  createdAt: timestamp
-                };
-                
-                // Output the clean JSON
-                controller.enqueue(new TextEncoder().encode(JSON.stringify(cleanJson, null, 2)));
-              } else {
-                // Fallback for clone action
-                const fallbackJson = {
-                  id: `script-${timestamp}`,
-                  name: "Clone Frame",
-                  description: "Clones the selected frame",
-                  color: "green",
-                  actions: [{
-                    id: `action-${timestamp}`,
-                    command: {
-                      name: "cloneFrame",
-                      metadata: {},
-                      title: "Clone Frame",
-                      description: "Creates a copy of the selected frame"
-                    },
-                    actions: []
-                  }],
-                  createdAt: timestamp
-                };
-                controller.enqueue(new TextEncoder().encode(JSON.stringify(fallbackJson, null, 2)));
-              }
-            } catch (error) {
-              console.error('Error processing action response:', error);
-              controller.error(error);
-            }
-          } else {
-            // For non-action requests, stream normally
-            try {
-              for await (const chunk of response.stream) {
-                const text = chunk.text();
-                if (text) {
-                  controller.enqueue(new TextEncoder().encode(text));
-                }
-              }
-            } catch (error) {
-              console.error('Stream error:', error);
-              controller.error(error);
-            }
+            controller.close();
           }
-          controller.close();
-        },
-        cancel() {
-          // Clean up if needed
-        }
-      });
-
-      // Return the streaming response
-      return new StreamingTextResponse(stream)
-    } catch (error) {
-      console.error('Chat API error:', error)
-      return new Response(
-        'Sorry, there was an error communicating with the AI. Please try again.',
-        { status: 500 }
-      )
+        })
+      );
     }
+
+    // Check if the user is asking about colors or design system
+    if (userMessage.includes('color') || userMessage.includes('design system')) {
+      const toolResult = await tools.getColorInfo.function({}, { selection, designSystem });
+      
+      const colorData = JSON.parse(toolResult);
+      return new StreamingTextResponse(
+        new ReadableStream({
+          async start(controller) {
+            // Send initial message
+            controller.enqueue(
+              new TextEncoder().encode(
+                `{"type":"text","content":"I'll show you the colors in our design system. Here's what I found:\\n\\n"}\\n`
+              )
+            );
+
+            // Send color table component
+            controller.enqueue(
+              new TextEncoder().encode(
+                `{"type":"tool-call","name":"getColorInfo","data":${toolResult}}\\n`
+              )
+            );
+
+            // Send closing message
+            controller.enqueue(
+              new TextEncoder().encode(
+                `{"type":"text","content":"\\nEach color is displayed with its name, hex value, and a visual preview for easy reference."}\\n`
+              )
+            );
+
+            controller.close();
+          }
+        })
+      );
+    }
+
+    // For all other responses, stream the text normally
+    return new StreamingTextResponse(
+      new ReadableStream({
+        async start(controller) {
+          controller.enqueue(
+            new TextEncoder().encode(
+              `{"type":"text","content":${JSON.stringify(responseText)}}\\n`
+            )
+          );
+          controller.close();
+        }
+      })
+    );
   } catch (error) {
-    console.error('Request processing error:', error)
+    console.error('Chat API error:', error);
     return new Response(
-      'Sorry, there was an error processing your request. Please try again.',
+      JSON.stringify({ error: 'Failed to process chat message' }),
       { status: 500 }
-    )
+    );
   }
 }

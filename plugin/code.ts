@@ -1,287 +1,285 @@
-declare const SITE_URL: string;
+// Collection names
+const COLLECTIONS = {
+  BRAND_COLORS: 'Brand Colors',
+  COLOR_MODES: 'Color Mode',
+  SCREENS: 'Screens'
+} as const;
 
-interface AutomatorCommand {
+// Color utility functions
+function padHex(hex: string): string {
+  return hex.length === 1 ? '0' + hex : hex;
+}
+
+function rgbToHex(color: RGB): string {
+  const r = Math.round(color.r * 255).toString(16);
+  const g = Math.round(color.g * 255).toString(16);
+  const b = Math.round(color.b * 255).toString(16);
+  return `#${padHex(r)}${padHex(g)}${padHex(b)}`.toUpperCase();
+}
+
+// Function to convert any color value to hex
+function toHexColor(value: VariableValue): string {
+  if (typeof value === 'object' && value !== null && 'r' in value) {
+    return rgbToHex(value as RGB);
+  } else if (typeof value === 'string' && value.startsWith('#')) {
+    return value.toUpperCase();
+  }
+  return 'N/A';
+}
+
+// Types for color system
+type ModeId = string;
+type ModeName = string;
+type CollectionModes = Record<ModeId, ModeName>;
+
+interface ColorMode {
+  modeId: string;
   name: string;
-  metadata: Record<string, any>;
-  title: string;
-  description: string;
+  value: string;
 }
 
-interface AutomatorAction {
-  id: string;
-  command: AutomatorCommand;
-  actions: AutomatorAction[];
-}
-
-interface AutomatorScript {
-  id: string;
+interface ColorVariable {
   name: string;
+  value: string;
   description: string;
-  color: string;
-  actions: AutomatorAction[];
-  createdAt: number;
+  resolvedValue: string | null;
 }
 
-// Function to get detailed information about a node
-function getNodeInfo(node: SceneNode): any {
-  const baseInfo: Record<string, any> = {
-    id: node.id,
-    name: node.name,
-    type: node.type,
-    visible: node.visible,
+interface ColorCollection {
+  [modeName: string]: ColorVariable[];
+}
+
+interface ColorInfo {
+  modes: {
+    [collectionName: string]: {
+      [modeId: string]: string;
+    };
+  };
+  collections: {
+    [collectionName: string]: ColorCollection;
+  };
+}
+
+interface ThemeGroup {
+  name: string;
+  colors: ColorVariable[];
+  subgroups: {
+    name: string;
+    colors: ColorVariable[];
+  }[];
+}
+
+interface CollectionMode {
+  name: string;
+  modes: string[];
+  modeIds: string[];
+}
+
+type ColorsByCategory = { [key: string]: ColorVariable[] };
+
+// Function to get design system information
+function getDesignSystemInfo() {
+  console.log('Getting design system info...');
+  
+  const variables = figma.variables.getLocalVariables();
+  const collections = figma.variables.getLocalVariableCollections();
+  
+  console.log('Found variables:', variables.length);
+  console.log('Found collections:', collections.length);
+  
+  // Get specific collections
+  const brandColors = collections.find(c => c.name === COLLECTIONS.BRAND_COLORS);
+  const colorModes = collections.find(c => c.name === COLLECTIONS.COLOR_MODES);
+  const screens = collections.find(c => c.name === COLLECTIONS.SCREENS);
+  
+  console.log('Collections found:', {
+    brandColors: brandColors?.name,
+    colorModes: colorModes?.name,
+    screens: screens?.name
+  });
+
+  // Process color variables (from Brand Colors and Color Mode collections)
+  const colorVariables = variables.filter(v => 
+    (v.variableCollectionId === brandColors?.id || v.variableCollectionId === colorModes?.id) &&
+    v.resolvedType === 'COLOR'
+  );
+
+  // Process screen variables (from Screens collection)
+  const screenVariables = variables.filter(v => 
+    v.variableCollectionId === screens?.id
+  );
+
+  // Process color information
+  const processedColors = processColorVariables(colorVariables, collections);
+  
+  // Process screen information
+  const processedScreens = processScreenVariables(screenVariables, collections);
+
+  return {
+    variables: {
+      colors: processedColors,
+      screens: processedScreens
+    }
+  };
+}
+
+function processColorVariables(colorVariables: Variable[], collections: VariableCollection[]): ColorInfo {
+  console.log('Processing color variables with:', {
+    numVariables: colorVariables.length,
+    collections: collections.map(c => c.name)
+  });
+
+  const colorInfo: ColorInfo = {
+    modes: {},
+    collections: {}
   };
 
-  // Add size information if available
-  if ('width' in node && 'height' in node) {
-    baseInfo.width = node.width;
-    baseInfo.height = node.height;
+  // First, create a map of all brand colors for reference
+  const brandColorMap = new Map<string, { value: string, name: string }>();
+  const brandCollection = collections.find(c => c.name === COLLECTIONS.BRAND_COLORS);
+  if (brandCollection) {
+    const brandVars = colorVariables.filter(v => v.variableCollectionId === brandCollection.id);
+    brandVars.forEach(variable => {
+      const modeId = Object.keys(variable.valuesByMode)[0]; // Brand colors only have one mode
+      const value = variable.valuesByMode[modeId];
+      if (typeof value === 'object' && 'r' in value) {
+        brandColorMap.set(variable.id, {
+          value: toHexColor(value),
+          name: variable.name
+        });
+      }
+    });
   }
 
-  // Add position information if available
-  if ('x' in node && 'y' in node) {
-    baseInfo.x = node.x;
-    baseInfo.y = node.y;
-  }
+  // Convert map to object for logging in a compatible way
+  const brandColorObj = Array.from(brandColorMap).reduce((obj, [key, value]) => {
+    obj[key] = value;
+    return obj;
+  }, {} as Record<string, { value: string, name: string }>);
+  
+  console.log('Brand color map:', brandColorObj);
 
-  // Add component specific information
-  if (node.type === 'COMPONENT' || node.type === 'INSTANCE') {
-    if ('componentProperties' in node) {
-      baseInfo.componentProperties = node.componentProperties;
+  // Process collections and their modes
+  collections.forEach(collection => {
+    if (collection.name === COLLECTIONS.BRAND_COLORS || collection.name === COLLECTIONS.COLOR_MODES) {
+      // Initialize the collection in modes and collections
+      colorInfo.modes[collection.name] = {};
+      colorInfo.collections[collection.name] = {};
+
+      // Store modes
+      for (const mode of collection.modes) {
+        colorInfo.modes[collection.name][mode.modeId] = mode.name;
+      }
+      
+      // Get variables for this collection
+      const collectionVars = colorVariables.filter(v => v.variableCollectionId === collection.id);
+      
+      // Process variables by mode
+      for (const mode of collection.modes) {
+        const modeName = mode.name;
+        const modeId = mode.modeId;
+        
+        // Initialize the mode in the collection if not exists
+        if (!colorInfo.collections[collection.name][modeName]) {
+          colorInfo.collections[collection.name][modeName] = [];
+        }
+        
+        // Process each variable
+        collectionVars.forEach(variable => {
+          console.log('Processing variable:', {
+            collection: collection.name,
+            mode: modeName,
+            name: variable.name,
+            type: variable.resolvedType,
+            value: variable.valuesByMode[modeId]
+          });
+
+          const value = variable.valuesByMode[modeId];
+          let aliasValue: string | null = null;
+          let resolvedValue: string | null = null;
+
+          if (value && typeof value === 'object') {
+            if ('r' in value) {
+              // Direct color value
+              resolvedValue = toHexColor(value);
+              aliasValue = resolvedValue;
+            } else if ('id' in value) {
+              // Alias to another color
+              const referencedColor = brandColorMap.get(value.id);
+              if (referencedColor) {
+                aliasValue = `→ ${referencedColor.name}`;
+                resolvedValue = referencedColor.value;
+              }
+            }
+          }
+
+          colorInfo.collections[collection.name][modeName].push({
+            name: variable.name,
+            value: aliasValue || 'N/A',
+            resolvedValue,
+            description: variable.description || ''
+          });
+        });
+      }
     }
-  }
+  });
 
-  // Add text content if it's a text node
-  if (node.type === 'TEXT') {
-    baseInfo.characters = (node as TextNode).characters;
-    baseInfo.fontSize = (node as TextNode).fontSize;
-    baseInfo.fontName = (node as TextNode).fontName;
-  }
+  console.log('Final color info:', JSON.stringify(colorInfo, null, 2));
+  return colorInfo;
+}
 
-  // Add children count if it's a container
-  if ('children' in node) {
-    baseInfo.childCount = (node as FrameNode | GroupNode | ComponentNode | InstanceNode).children.length;
-  }
+function processScreenVariables(variables: Variable[], collections: VariableCollection[]) {
+  const screenTokens: { [key: string]: any[] } = {
+    typography: [],
+    spacing: [],
+    sizing: [],
+    effects: []
+  };
 
-  return baseInfo;
+  variables.forEach(v => {
+    const nameParts = v.name.split('/');
+    const category = nameParts[0].toLowerCase();
+    
+    if (category in screenTokens) {
+      screenTokens[category].push({
+        name: v.name,
+        value: v.valuesByMode[Object.keys(v.valuesByMode)[0]],
+        description: v.description || '',
+        resolvedType: v.resolvedType
+      });
+    }
+  });
+
+  return screenTokens;
 }
 
 // Function to get selection information
 function getSelectionInfo() {
   const selection = figma.currentPage.selection;
-  const pageInfo = {
-    id: figma.currentPage.id,
-    name: figma.currentPage.name,
-    type: figma.currentPage.type,
-    childCount: figma.currentPage.children.length,
-  };
-
-  console.log('Current selection:', selection);
-  console.log('Current page:', pageInfo);
-
-  const selectionDetails = selection.map(node => {
-    const info = getNodeInfo(node);
-    console.log(`Node info for ${node.name}:`, info);
-    return info;
-  });
-
   return {
     count: selection.length,
-    items: selectionDetails,
-    page: pageInfo
+    items: selection.map(node => ({
+      id: node.id,
+      name: node.name,
+      type: node.type
+    })),
+    page: {
+      id: figma.currentPage.id,
+      name: figma.currentPage.name
+    }
   };
 }
 
-async function executeAutomatorAction(action: AutomatorAction, selection: readonly SceneNode[]) {
-  console.log('Executing action:', action);
-  const { command, actions } = action;
+// Initialize plugin
+console.log('Initializing plugin...');
 
-  switch (command.name) {
-    case 'cloneFrame':
-      console.log('Cloning frame...');
-      if (selection.length > 0) {
-        const node = selection[0];
-        console.log('Selected node:', node);
-        if ('clone' in node) {
-          const clone = node.clone();
-          // Position the clone next to the original
-          if ('x' in clone && 'width' in node) {
-            clone.x = node.x + node.width + 100;
-          }
-          // Add to the same parent as the original
-          if (node.parent) {
-            node.parent.appendChild(clone);
-          }
-          console.log('Frame cloned successfully');
-        } else {
-          console.log('Selected node cannot be cloned');
-        }
-      } else {
-        console.log('No selection found');
-      }
-      break;
-
-    case 'createVariant':
-      console.log('Creating variant...');
-      if (selection.length > 0) {
-        const node = selection[0];
-        const { variantName } = command.metadata;
-        console.log('Creating variant with name:', variantName);
-        
-        // If selected node is already a component
-        if (node.type === 'COMPONENT') {
-          console.log('Selected node is a component');
-          // Create a new component with the same properties
-          const variant = figma.createComponent();
-          
-          // Copy properties and content from original component
-          if ('width' in node && 'height' in node && 'x' in node && 'y' in node) {
-            variant.resize(node.width, node.height);
-            variant.x = node.x;
-            variant.y = node.y + node.height + 100; // Position below original
-            
-            // Clone the content into the new component
-            if ('clone' in node) {
-              const clone = node.clone();
-              variant.appendChild(clone);
-            }
-            
-            // Set the variant name
-            variant.name = variantName;
-            
-            // Add to the same parent as the original
-            if (node.parent?.type === 'COMPONENT_SET') {
-              node.parent.appendChild(variant);
-            } else if (node.parent) {
-              // Create a new component set
-              const componentSet = figma.combineAsVariants([node, variant], node.parent);
-              componentSet.name = node.name.split('=')[0]; // Use base name for component set
-            }
-            console.log('Variant created successfully');
-          }
-        } else {
-          console.log('Selected node is not a component, creating new component');
-          // Create a new component from non-component node
-          const component = figma.createComponent();
-          
-          // Copy properties from selected node
-          if ('width' in node && 'height' in node && 'x' in node && 'y' in node) {
-            component.resize(node.width, node.height);
-            component.x = node.x;
-            component.y = node.y;
-            
-            // Clone the content into the component
-            if ('clone' in node) {
-              const clone = node.clone();
-              component.appendChild(clone);
-            }
-            
-            // Set the variant name
-            component.name = variantName;
-            console.log('New component created successfully');
-          }
-        }
-      } else {
-        console.log('No selection found');
-      }
-      break;
-
-    case 'convertToComponent':
-      console.log('Converting to component...');
-      if (selection.length > 0) {
-        const node = selection[0];
-        if ('width' in node && 'height' in node && 'x' in node && 'y' in node) {
-          const component = figma.createComponent();
-          component.x = node.x;
-          component.y = node.y;
-          component.resize(node.width, node.height);
-          
-          // Move all selected items into the component
-          selection.forEach(selectedNode => {
-            if (selectedNode.parent) {
-              selectedNode.parent.appendChild(component);
-              component.appendChild(selectedNode);
-            }
-          });
-          console.log('Converted to component successfully');
-        }
-      } else {
-        console.log('No selection found');
-      }
-      break;
-
-    case 'setInstanceProperty':
-      console.log('Setting instance property...');
-      if (selection.length > 0) {
-        const node = selection[0];
-        if ('setProperties' in node) {
-          const { property, value } = command.metadata;
-          node.setProperties({ [property]: value });
-          console.log('Property set successfully:', property, value);
-        } else {
-          console.log('Selected node does not support properties');
-        }
-      } else {
-        console.log('No selection found');
-      }
-      break;
-
-    case 'setVariable':
-      console.log('Setting variable...');
-      if (selection.length > 0) {
-        const { key, value } = command.metadata;
-        console.log('Setting variable:', key, value);
-        selection.forEach(node => {
-          if ('boundVariables' in node) {
-            // Find the variable by key
-            const collection = figma.variables.getLocalVariableCollections()[0];
-            if (collection) {
-              const variable = collection.variableIds
-                .map(id => figma.variables.getVariableById(id))
-                .find(v => v?.name === key);
-              
-              if (variable) {
-                console.log('Found variable:', variable.name);
-                // Get the default mode ID
-                const modeId = collection.defaultModeId;
-                
-                // Set the variable value using the proper API
-                variable.setValueForMode(modeId, value);
-                
-                // Bind the variable to the node
-                if (node.type === 'INSTANCE') {
-                  // Pass the variable directly to setBoundVariable
-                  node.setBoundVariable(key as VariableBindableNodeField, variable);
-                  console.log('Variable bound successfully');
-                } else {
-                  console.log('Node is not an instance, cannot bind variable');
-                }
-              } else {
-                console.log('Variable not found:', key);
-              }
-            } else {
-              console.log('No variable collection found');
-            }
-          } else {
-            console.log('Node does not support variables');
-          }
-        });
-      } else {
-        console.log('No selection found');
-      }
-      break;
-  }
-
-  // Execute nested actions
-  for (const subAction of actions) {
-    await executeAutomatorAction(subAction, selection);
-  }
-}
-
-console.log('Plugin code loaded');
-
-figma.showUI(`<script>window.location.href = '${SITE_URL}'</script>`, {
+// Show UI with the URL from environment
+figma.showUI(`<script>
+  window.location.href = 'http://localhost:3000/';
+</script>`, {
   width: 700,
   height: 700,
+  themeColors: true
 });
 
 // Function to send message to UI
@@ -295,50 +293,101 @@ figma.on('selectionchange', () => {
   const selectionInfo = getSelectionInfo();
   sendToUI({
     type: 'SELECTION_CHANGED',
-    selection: selectionInfo,
+    selection: selectionInfo
   });
 });
 
-figma.ui.onmessage = async (message) => {
-  console.log('Received message:', message);
+// Handle messages from UI
+figma.ui.onmessage = async (msg) => {
+  console.log('Received message:', msg);
 
-  switch (message.type) {
-    case "GET_SELECTION": {
-      console.log('Getting selection info');
-      const selectionInfo = getSelectionInfo();
-      console.log('Selection info:', selectionInfo);
-      sendToUI({
-        type: 'SELECTION_INFO',
-        selection: selectionInfo,
+  if (msg.type === 'UPDATE_DESIGN_SYSTEM') {
+    // Update the design system info and send it back to UI
+    const designSystem = getDesignSystemInfo();
+    console.log('Updated design system info:', JSON.stringify(designSystem, null, 2));
+    figma.ui.postMessage({
+      type: 'DESIGN_SYSTEM_UPDATED',
+      designSystem
+    });
+    return;
+  }
+
+  if (msg.type === 'query') {
+    const query = msg.query.toLowerCase();
+    console.log('Processing query:', query);
+
+    const designSystem = getDesignSystemInfo();
+    console.log('Design system info:', JSON.stringify(designSystem, null, 2));
+
+    const selection = getSelectionInfo();
+    console.log('Selection info:', selection);
+    
+    try {
+      // Determine if this is a color-related query
+      const isColorQuery = query.includes('color') || 
+                          query.includes('brand') || 
+                          query.includes('theme') ||
+                          query.includes('dark') ||
+                          query.includes('light');
+
+      console.log('Query type:', isColorQuery ? 'color query' : 'non-color query');
+
+      const systemContext = isColorQuery 
+        ? `You are a Design System Assistant that ONLY provides information about colors from the Brand Colors and Color Mode collections.
+           When asked about colors:
+           - Use Brand Colors collection for brand-specific colors (primary brand colors)
+           - Use Color Mode collection for theme-specific colors (fg, surface, stroke)
+           - Always show the color value in both light and dark modes when applicable
+           - Display colors visually with their hex values
+           - Group colors by their categories (brand/, fg/, surface/, etc.)
+           NEVER give general color advice - only show colors that exist in these collections.`
+        : `You are a Design System Assistant that ONLY provides information from the Screens collection.
+           This includes typography, spacing, sizing, and effects.
+           NEVER give general design advice - only show tokens that exist in the Screens collection.`;
+
+      const requestBody = {
+        messages: [
+          { 
+            role: 'system', 
+            content: systemContext
+          },
+          { role: 'user', content: query }
+        ],
+        designSystem: {
+          variables: {
+            colors: {
+              collections: designSystem.variables.colors.collections,
+              modes: designSystem.variables.colors.modes
+            }
+          }
+        },
+        selection
+      };
+
+      console.log('Sending request to AI:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
       });
-      break;
-    }
 
-    case "EXECUTE_AUTOMATOR": {
-      console.log('Executing automator script:', message.script);
-      try {
-        const script: AutomatorScript = message.script;
-        const selection = figma.currentPage.selection;
-        console.log('Current selection:', selection);
+      const result = await response.json();
+      console.log('Received response from AI:', result);
 
-        for (const action of script.actions) {
-          await executeAutomatorAction(action, selection);
-        }
-
-        console.log('Script execution completed');
-        sendToUI({
-          type: "AUTOMATOR_COMPLETE",
-          id: message.id,
-        });
-      } catch (e) {
-        console.error('Script execution failed:', e);
-        sendToUI({
-          type: "AUTOMATOR_ERROR",
-          error: e instanceof Error ? e.message : String(e),
-          id: message.id,
-        });
-      }
-      break;
+      figma.ui.postMessage({
+        type: 'QUERY_RESPONSE',
+        ...result
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      figma.ui.postMessage({
+        type: 'QUERY_RESPONSE',
+        role: 'assistant',
+        content: 'Sorry, there was an error processing your request. Please try again.'
+      });
     }
   }
 };

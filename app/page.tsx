@@ -2,11 +2,28 @@
 
 import { useChat } from 'ai/react'
 import { useEffect, useRef, useState } from 'react'
+import styles from './page.module.css'
 
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+}
+
+interface DesignSystem {
+  variables?: {
+    colors?: any;
+    screens?: any;
+  };
+}
+
+interface Selection {
+  count: number
+  items: Array<{
+    id: string;
+    name: string;
+    type: string;
+  }>;
 }
 
 interface SelectionInfo {
@@ -33,10 +50,12 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [lastExecutedId, setLastExecutedId] = useState<string | null>(null)
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
+  const [designSystem, setDesignSystem] = useState<DesignSystem>({});
   const { messages, input, setInput, isLoading, handleSubmit } = useChat({
     api: '/api/chat',
     body: {
-      selection // Include selection info in the chat request
+      selection,
+      designSystem
     }
   });
 
@@ -46,6 +65,12 @@ export default function Home() {
       pluginMessage: message,
       pluginId: '*'  // Allow any plugin to receive the message
     }, '*');
+  };
+
+  // Request design system update
+  const updateDesignSystem = () => {
+    console.log('Requesting design system update...');
+    sendToPlugin({ type: 'UPDATE_DESIGN_SYSTEM' });
   };
 
   // Function to execute Automator script
@@ -63,7 +88,9 @@ export default function Home() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    if (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection')) {
+    if (input.toLowerCase().includes('update design system')) {
+      updateDesignSystem();
+    } else if (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection')) {
       console.log('Requesting selection info...');
       sendToPlugin({ type: 'GET_SELECTION' });
     }
@@ -72,28 +99,37 @@ export default function Home() {
     handleSubmit(e);
   };
 
-  // Handle messages from the plugin
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      const message = event.data.pluginMessage;
-      if (!message) return;
+    // Listen for messages from the plugin
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      console.log('Received plugin message:', msg);
 
-      console.log('Received plugin message:', message);
-
-      if (message.type === 'SELECTION_INFO' || message.type === 'SELECTION_CHANGED') {
-        console.log('Setting selection data:', message.selection);
-        setSelection(message.selection);
-      } else if (message.type === 'AUTOMATOR_ERROR') {
-        console.error('Automator error:', message.error)
+      if (msg.type === 'DESIGN_SYSTEM_UPDATED') {
+        console.log('Design system updated:', msg.designSystem);
+        setDesignSystem(msg.designSystem);
+      } else if (msg.type === 'QUERY_RESPONSE') {
+        console.log('Query response:', msg);
+        // Removed append here
+      } else if (msg.type === 'SELECTION_INFO') {
+        console.log('Setting selection data:', msg.selection);
+        setSelection(msg.selection);
+      } else if (msg.type === 'AUTOMATOR_ERROR') {
+        console.error('Automator error:', msg.error)
         // Handle error (could add to messages or show a notification)
-      } else if (message.type === 'AUTOMATOR_COMPLETE') {
+      } else if (msg.type === 'AUTOMATOR_COMPLETE') {
         console.log('Automator script completed successfully')
         // Handle success
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    // Request initial design system info
+    parent.postMessage({ pluginMessage: { type: 'UPDATE_DESIGN_SYSTEM' } }, '*');
+  }, []);
+
+  // Request design system info on first load
+  useEffect(() => {
+    updateDesignSystem();
   }, []);
 
   // Watch for new messages and execute scripts
@@ -121,21 +157,26 @@ export default function Home() {
                            lastMessage.content.match(/\{[\s\S]*\}/);
           
           if (jsonMatch) {
+            let extractedJson = jsonMatch[1] || jsonMatch[0];
+            extractedJson = extractedJson.trim();
+            
             try {
-              const jsonContent = jsonMatch[1] || jsonMatch[0];
-              console.log('Extracted JSON string:', jsonContent);
+              // Try to parse as a regular JSON first
+              const parsedJson = JSON.parse(extractedJson);
               
-              const contentObj = JSON.parse(jsonContent.trim());
-              console.log('Parsed extracted JSON:', contentObj);
-              
-              if (contentObj.actions?.[0]?.command?.name) {
+              // Check if this is color data by looking for collection and modes
+              if (parsedJson.collection && parsedJson.modes) {
+                console.log('Found color data:', parsedJson);
+                // setContentObj({ type: 'color', data: parsedJson });
+              } else if (parsedJson.actions?.[0]?.command?.name) {
                 console.log('Executing extracted Automator script...');
-                executeAutomatorScript(contentObj);
+                executeAutomatorScript(parsedJson);
               } else {
-                console.log('Extracted JSON is not a valid Automator script:', contentObj);
+                console.log('Extracted JSON is not a valid Automator script:', parsedJson);
               }
-            } catch (e) {
-              console.error('Failed to parse extracted JSON:', e);
+            } catch (error) {
+              console.error('Failed to parse extracted JSON:', error);
+              // setContentObj(null);
             }
           } else {
             console.log('No JSON found in message');
@@ -151,85 +192,52 @@ export default function Home() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white">
-      <h1 className="text-4xl font-bold mb-5 mt-2">Design System Copilot</h1>
-      <div className="text-sm mb-5 text-gray-300">
-        Your AI assistant for design system implementation
+    <div className="flex flex-col h-screen">
+      <div className="flex-none">
+        <h1 className="text-4xl font-bold p-4">
+          Design Copilot
+        </h1>
       </div>
-
-      <div className="w-full max-w-4xl px-4 mb-24">
-        <div className="flex flex-col space-y-4 mb-4 max-h-[60vh] overflow-y-auto">
-          {messages.map((message) => (
+      
+      <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex flex-col space-y-4">
+          {messages.map((message, index) => (
             <div
-              key={message.id}
-              className={`flex ${
+              key={index}
+              className={`${
                 message.role === 'assistant'
-                  ? 'bg-gray-800'
-                  : 'bg-gray-700'
-              } rounded-lg p-4`}
+                  ? 'bg-gray-100'
+                  : 'bg-blue-100'
+              } p-4 rounded-lg max-w-3xl ${
+                message.role === 'assistant' ? 'mr-auto' : 'ml-auto'
+              }`}
             >
-              <div className="flex-1">
-                <div className="font-medium mb-2 flex items-center">
-                  {message.role === 'assistant' ? (
-                    <>
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
-                      Design Copilot
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      You
-                    </>
-                  )}
-                </div>
-                <div 
-                  className="prose prose-invert"
-                  dangerouslySetInnerHTML={{ __html: message.content }}
-                />
-              </div>
+              <div 
+                className="prose prose-invert"
+                dangerouslySetInnerHTML={{ __html: message.content }}
+              />
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        <div className="fixed bottom-0 left-0 w-full bg-gray-800 p-4">
-          <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleFormSubmit} className="flex flex-col space-y-4">
-              <input
-                className="w-full rounded-md p-4 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={input}
-                placeholder="Ask about design tokens, component architecture, or request Figma actions..."
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isLoading}
-              />
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`px-6 py-3 rounded-md bg-blue-600 text-white font-medium ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
-                  }`}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
-                    </div>
-                  ) : (
-                    'Send Message'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      <div className="flex-none p-4">
+        <form onSubmit={handleFormSubmit} className="flex space-x-4">
+          <input
+            className="flex-1 p-2 border rounded-lg"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about your design system..."
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            disabled={isLoading}
+          >
+            Send
+          </button>
+        </form>
       </div>
     </div>
   )

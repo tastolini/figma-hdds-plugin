@@ -1,0 +1,5884 @@
+Directory structure:
+└── vercel-labs-gemini-chatbot/
+    ├── README.md
+    ├── LICENSE
+    ├── components.json
+    ├── drizzle.config.ts
+    ├── middleware.ts
+    ├── next-env.d.ts
+    ├── next.config.mjs
+    ├── package.json
+    ├── pnpm-lock.yaml
+    ├── postcss.config.mjs
+    ├── tailwind.config.ts
+    ├── tsconfig.json
+    ├── .env.example
+    ├── .eslintrc.json
+    ├── ai/
+    │   ├── actions.ts
+    │   ├── custom-middleware.ts
+    │   └── index.ts
+    ├── app/
+    │   ├── globals.css
+    │   ├── layout.tsx
+    │   ├── (auth)/
+    │   │   ├── actions.ts
+    │   │   ├── auth.config.ts
+    │   │   ├── auth.ts
+    │   │   ├── api/
+    │   │   │   └── auth/
+    │   │   │       └── [...nextauth]/
+    │   │   │           └── route.ts
+    │   │   ├── login/
+    │   │   │   └── page.tsx
+    │   │   └── register/
+    │   │       └── page.tsx
+    │   └── (chat)/
+    │       ├── page.tsx
+    │       ├── api/
+    │       │   ├── chat/
+    │       │   │   └── route.ts
+    │       │   ├── files/
+    │       │   │   └── upload/
+    │       │   │       └── route.ts
+    │       │   ├── history/
+    │       │   │   └── route.ts
+    │       │   └── reservation/
+    │       │       └── route.ts
+    │       └── chat/
+    │           └── [id]/
+    │               └── page.tsx
+    ├── components/
+    │   ├── custom/
+    │   │   ├── auth-form.tsx
+    │   │   ├── chat.tsx
+    │   │   ├── history.tsx
+    │   │   ├── icons.tsx
+    │   │   ├── markdown.tsx
+    │   │   ├── message.tsx
+    │   │   ├── multimodal-input.tsx
+    │   │   ├── navbar.tsx
+    │   │   ├── overview.tsx
+    │   │   ├── preview-attachment.tsx
+    │   │   ├── submit-button.tsx
+    │   │   ├── theme-provider.tsx
+    │   │   ├── theme-toggle.tsx
+    │   │   ├── use-scroll-to-bottom.ts
+    │   │   ├── use-window-size.tsx
+    │   │   └── weather.tsx
+    │   ├── flights/
+    │   │   ├── authorize-payment.tsx
+    │   │   ├── boarding-pass.tsx
+    │   │   ├── create-reservation.tsx
+    │   │   ├── flight-status.tsx
+    │   │   ├── list-flights.tsx
+    │   │   ├── select-seats.tsx
+    │   │   └── verify-payment.tsx
+    │   └── ui/
+    │       ├── alert-dialog.tsx
+    │       ├── button.tsx
+    │       ├── dropdown-menu.tsx
+    │       ├── input.tsx
+    │       ├── label.tsx
+    │       ├── sheet.tsx
+    │       └── textarea.tsx
+    ├── db/
+    │   ├── migrate.ts
+    │   ├── queries.ts
+    │   └── schema.ts
+    ├── lib/
+    │   ├── utils.ts
+    │   └── drizzle/
+    │       ├── 0000_absurd_joshua_kane.sql
+    │       └── meta/
+    │           ├── 0000_snapshot.json
+    │           └── _journal.json
+    └── public/
+        ├── fonts/
+        │   ├── geist-mono.woff2
+        │   └── geist.woff2
+        └── images/
+
+================================================
+File: /README.md
+================================================
+<a href="https://chat.vercel.ai/">
+  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
+  <h1 align="center">Next.js Gemini Chatbot</h1>
+</a>
+
+<p align="center">
+  An Open-Source AI Chatbot Template Built With Next.js and the AI SDK by Vercel.
+</p>
+
+<p align="center">
+  <a href="#features"><strong>Features</strong></a> ·
+  <a href="#model-providers"><strong>Model Providers</strong></a> ·
+  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
+  <a href="#running-locally"><strong>Running locally</strong></a>
+</p>
+<br/>
+
+## Features
+
+- [Next.js](https://nextjs.org) App Router
+  - Advanced routing for seamless navigation and performance
+  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
+- [AI SDK](https://sdk.vercel.ai/docs)
+  - Unified API for generating text, structured objects, and tool calls with LLMs
+  - Hooks for building dynamic chat and generative user interfaces
+  - Supports Google (default), OpenAI, Anthropic, Cohere, and other model providers
+- [shadcn/ui](https://ui.shadcn.com)
+  - Styling with [Tailwind CSS](https://tailwindcss.com)
+  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
+- Data Persistence
+  - [Vercel Postgres powered by Neon](https://vercel.com/storage/postgres) for saving chat history and user data
+  - [Vercel Blob](https://vercel.com/storage/blob) for efficient object storage
+- [NextAuth.js](https://github.com/nextauthjs/next-auth)
+  - Simple and secure authentication
+
+## Model Providers
+
+This template ships with Google Gemini `gemini-1.5-pro` models as the default. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+
+## Deploy Your Own
+
+You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fgemini-chatbot&env=AUTH_SECRET,GOOGLE_GENERATIVE_AI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fgemini-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=Next.js%20Gemini%20Chatbot&demo-description=An%20Open-Source%20AI%20Chatbot%20Template%20Built%20With%20Next.js%20and%20the%20AI%20SDK%20by%20Vercel.&demo-url=https%3A%2F%2Fgemini.vercel.ai&stores=[{%22type%22:%22postgres%22},{%22type%22:%22blob%22}])
+
+## Running locally
+
+You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+
+> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various Google Cloud and authentication provider accounts.
+
+1. Install Vercel CLI: `npm i -g vercel`
+2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
+3. Download your environment variables: `vercel env pull`
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Your app template should now be running on [localhost:3000](http://localhost:3000/).
+
+
+================================================
+File: /LICENSE
+================================================
+Copyright 2023 Vercel, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+================================================
+File: /components.json
+================================================
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  }
+}
+
+
+================================================
+File: /drizzle.config.ts
+================================================
+import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
+
+config({
+  path: ".env.local",
+});
+
+export default defineConfig({
+  schema: "./db/schema.ts",
+  out: "./lib/drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.POSTGRES_URL!,
+  },
+});
+
+
+================================================
+File: /middleware.ts
+================================================
+import NextAuth from "next-auth";
+
+import { authConfig } from "@/app/(auth)/auth.config";
+
+export default NextAuth(authConfig).auth;
+
+export const config = {
+  matcher: ["/", "/:id", "/api/:path*", "/login", "/register"],
+};
+
+
+================================================
+File: /next-env.d.ts
+================================================
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/building-your-application/configuring/typescript for more information.
+
+
+================================================
+File: /next.config.mjs
+================================================
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {},
+  images: {
+    remotePatterns: [],
+  },
+};
+
+export default nextConfig;
+
+
+================================================
+File: /package.json
+================================================
+{
+  "name": "gemini-chatbot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "tsx db/migrate && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^0.0.51",
+    "@radix-ui/react-alert-dialog": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-dropdown-menu": "^2.1.1",
+    "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.2",
+    "@radix-ui/react-visually-hidden": "^1.1.0",
+    "@vercel/analytics": "^1.3.1",
+    "@vercel/blob": "^0.24.1",
+    "@vercel/postgres": "^0.10.0",
+    "ai": "3.4.9",
+    "bcrypt-ts": "^5.0.2",
+    "class-variance-authority": "^0.7.0",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.34.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-tailwindcss": "^3.17.5",
+    "framer-motion": "^11.3.19",
+    "geist": "^1.3.1",
+    "input-otp": "^1.2.4",
+    "lucide-react": "^0.446.0",
+    "next": "15.0.0-canary.152",
+    "next-auth": "5.0.0-beta.22",
+    "next-themes": "^0.3.0",
+    "postgres": "^3.4.4",
+    "react": "19.0.0-rc-7771d3a7-20240827",
+    "react-dom": "19.0.0-rc-7771d3a7-20240827",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "server-only": "^0.0.1",
+    "sonner": "^1.5.0",
+    "swr": "^2.2.5",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss-animate": "^1.0.7",
+    "usehooks-ts": "^3.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/d3-scale": "^4.0.8",
+    "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "drizzle-kit": "^0.25.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.31.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5"
+  }
+}
+
+
+================================================
+File: /postcss.config.mjs
+================================================
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+  },
+};
+
+export default config;
+
+
+================================================
+File: /tailwind.config.ts
+================================================
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    fontFamily: {
+      sans: ["geist"],
+      mono: ["geist-mono"],
+    },
+    extend: {
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      colors: {
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+  safelist: ["w-32", "w-44", "w-52"],
+};
+export default config;
+
+
+================================================
+File: /tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+================================================
+File: /.env.example
+================================================
+# Get your Google Gemini API Key here https://cloud.google.com/vertex-ai
+GOOGLE_GENERATIVE_AI_API_KEY=****
+
+# Generate a random secret: https://generate-secret.vercel.app/32 or `openssl rand -base64 32`
+AUTH_SECRET=****
+
+/*
+ * The following keys below are automatically created and
+ * added to your environment when you deploy on vercel
+ */
+
+# Instructions to create kv database here: https://vercel.com/docs/storage/vercel-blob
+BLOB_READ_WRITE_TOKEN=****
+
+# Instructions to create a database here: https://vercel.com/docs/storage/vercel-postgres/quickstart
+POSTGRES_URL=****
+
+
+================================================
+File: /.eslintrc.json
+================================================
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "prettier",
+    "plugin:tailwindcss/recommended"
+  ],
+  "plugins": ["import", "tailwindcss"],
+  "rules": {
+    "tailwindcss/no-custom-classname": "off",
+    "tailwindcss/classnames-order": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          ["parent", "sibling"],
+          "index",
+          "object",
+          "type"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
+  "ignorePatterns": ["**/components/ui/**"]
+}
+
+
+================================================
+File: /ai/actions.ts
+================================================
+import { generateObject } from "ai";
+import { z } from "zod";
+
+import { geminiFlashModel } from ".";
+
+export async function generateSampleFlightStatus({
+  flightNumber,
+  date,
+}: {
+  flightNumber: string;
+  date: string;
+}) {
+  const { object: flightStatus } = await generateObject({
+    model: geminiFlashModel,
+    prompt: `Flight status for flight number ${flightNumber} on ${date}`,
+    schema: z.object({
+      flightNumber: z.string().describe("Flight number, e.g., BA123, AA31"),
+      departure: z.object({
+        cityName: z.string().describe("Name of the departure city"),
+        airportCode: z.string().describe("IATA code of the departure airport"),
+        airportName: z.string().describe("Full name of the departure airport"),
+        timestamp: z.string().describe("ISO 8601 departure date and time"),
+        terminal: z.string().describe("Departure terminal"),
+        gate: z.string().describe("Departure gate"),
+      }),
+      arrival: z.object({
+        cityName: z.string().describe("Name of the arrival city"),
+        airportCode: z.string().describe("IATA code of the arrival airport"),
+        airportName: z.string().describe("Full name of the arrival airport"),
+        timestamp: z.string().describe("ISO 8601 arrival date and time"),
+        terminal: z.string().describe("Arrival terminal"),
+        gate: z.string().describe("Arrival gate"),
+      }),
+      totalDistanceInMiles: z
+        .number()
+        .describe("Total flight distance in miles"),
+    }),
+  });
+
+  return flightStatus;
+}
+
+export async function generateSampleFlightSearchResults({
+  origin,
+  destination,
+}: {
+  origin: string;
+  destination: string;
+}) {
+  const { object: flightSearchResults } = await generateObject({
+    model: geminiFlashModel,
+    prompt: `Generate search results for flights from ${origin} to ${destination}, limit to 4 results`,
+    output: "array",
+    schema: z.object({
+      id: z
+        .string()
+        .describe("Unique identifier for the flight, like BA123, AA31, etc."),
+      departure: z.object({
+        cityName: z.string().describe("Name of the departure city"),
+        airportCode: z.string().describe("IATA code of the departure airport"),
+        timestamp: z.string().describe("ISO 8601 departure date and time"),
+      }),
+      arrival: z.object({
+        cityName: z.string().describe("Name of the arrival city"),
+        airportCode: z.string().describe("IATA code of the arrival airport"),
+        timestamp: z.string().describe("ISO 8601 arrival date and time"),
+      }),
+      airlines: z.array(
+        z.string().describe("Airline names, e.g., American Airlines, Emirates"),
+      ),
+      priceInUSD: z.number().describe("Flight price in US dollars"),
+      numberOfStops: z.number().describe("Number of stops during the flight"),
+    }),
+  });
+
+  return { flights: flightSearchResults };
+}
+
+export async function generateSampleSeatSelection({
+  flightNumber,
+}: {
+  flightNumber: string;
+}) {
+  const { object: rows } = await generateObject({
+    model: geminiFlashModel,
+    prompt: `Simulate available seats for flight number ${flightNumber}, 6 seats on each row and 5 rows in total, adjust pricing based on location of seat`,
+    output: "array",
+    schema: z.array(
+      z.object({
+        seatNumber: z.string().describe("Seat identifier, e.g., 12A, 15C"),
+        priceInUSD: z
+          .number()
+          .describe("Seat price in US dollars, less than $99"),
+        isAvailable: z
+          .boolean()
+          .describe("Whether the seat is available for booking"),
+      }),
+    ),
+  });
+
+  return { seats: rows };
+}
+
+export async function generateReservationPrice(props: {
+  seats: string[];
+  flightNumber: string;
+  departure: {
+    cityName: string;
+    airportCode: string;
+    timestamp: string;
+    gate: string;
+    terminal: string;
+  };
+  arrival: {
+    cityName: string;
+    airportCode: string;
+    timestamp: string;
+    gate: string;
+    terminal: string;
+  };
+  passengerName: string;
+}) {
+  const { object: reservation } = await generateObject({
+    model: geminiFlashModel,
+    prompt: `Generate price for the following reservation \n\n ${JSON.stringify(props, null, 2)}`,
+    schema: z.object({
+      totalPriceInUSD: z
+        .number()
+        .describe("Total reservation price in US dollars"),
+    }),
+  });
+
+  return reservation;
+}
+
+
+================================================
+File: /ai/custom-middleware.ts
+================================================
+import { Experimental_LanguageModelV1Middleware } from "ai";
+
+export const customMiddleware: Experimental_LanguageModelV1Middleware = {};
+
+
+================================================
+File: /ai/index.ts
+================================================
+import { google } from "@ai-sdk/google";
+import { experimental_wrapLanguageModel as wrapLanguageModel } from "ai";
+
+import { customMiddleware } from "./custom-middleware";
+
+export const geminiProModel = wrapLanguageModel({
+  model: google("gemini-1.5-pro-002"),
+  middleware: customMiddleware,
+});
+
+export const geminiFlashModel = wrapLanguageModel({
+  model: google("gemini-1.5-flash-002"),
+  middleware: customMiddleware,
+});
+
+
+================================================
+File: /app/globals.css
+================================================
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --foreground-rgb: 255, 255, 255;
+        --background-start-rgb: 0, 0, 0;
+        --background-end-rgb: 0, 0, 0;
+    }
+}
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 3.9%;
+        --primary: 244 40% 63%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 240 4.8% 95.9%;
+        --secondary-foreground: 240 5.9% 10%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 5.9% 90%;
+        --input: 240 5.9% 90%;
+        --ring: 246, 47%, 65%;
+        --chart-1: 12 76% 61%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --radius: 0.75rem;
+    }
+    .dark {
+        --background: 240 10% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 240 10% 3.9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 240 10% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 244 40% 63%;
+        --primary-foreground: 240 5.9% 10%;
+        --secondary: 240 3.7% 15.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 240 3.7% 15.9%;
+        --muted-foreground: 240 5% 64.9%;
+        --accent: 240 3.7% 15.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 3.7% 15.9%;
+        --input: 240 3.7% 15.9%;
+        --ring: 240 4.9% 83.9%;
+        --chart-1: 220 70% 50%;
+        --chart-2: 160 60% 45%;
+        --chart-3: 30 80% 55%;
+        --chart-4: 280 65% 60%;
+        --chart-5: 340 75% 55%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    @font-face {
+        font-family: "geist";
+        font-style: normal;
+        font-weight: 100 900;
+        src: url(/fonts/geist.woff2) format("woff2");
+    }
+
+    @font-face {
+        font-family: "geist-mono";
+        font-style: normal;
+        font-weight: 100 900;
+        src: url(/fonts/geist-mono.woff2) format("woff2");
+    }
+}
+
+.skeleton {
+    * {
+        pointer-events: none !important;
+    }
+
+    *[class^="text"] {
+        color: transparent !important;
+        @apply rounded-sm bg-foreground/20 select-none animate-pulse;
+    }
+
+    *[class^="no-skeleton"] {
+        opacity: 0 !important;
+    }
+
+    input {
+        opacity: 0 !important;
+    }
+
+    .skeleton-bg {
+        @apply bg-foreground/10;
+    }
+
+    .skeleton-div {
+        @apply bg-foreground/20 animate-pulse;
+    }
+}
+
+
+================================================
+File: /app/layout.tsx
+================================================
+import { Metadata } from "next";
+import { Toaster } from "sonner";
+
+import { Navbar } from "@/components/custom/navbar";
+import { ThemeProvider } from "@/components/custom/theme-provider";
+
+import "./globals.css";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://gemini.vercel.ai"),
+  title: "Next.js Gemini Chatbot",
+  description: "Next.js chatbot template using the AI SDK and Gemini.",
+};
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className="antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Toaster position="top-center" />
+          <Navbar />
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+
+
+================================================
+File: /app/(auth)/actions.ts
+================================================
+"use server";
+
+import { z } from "zod";
+
+import { createUser, getUser } from "@/db/queries";
+
+import { signIn } from "./auth";
+
+const authFormSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export interface LoginActionState {
+  status: "idle" | "in_progress" | "success" | "failed" | "invalid_data";
+}
+
+export const login = async (
+  _: LoginActionState,
+  formData: FormData,
+): Promise<LoginActionState> => {
+  try {
+    const validatedData = authFormSchema.parse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+
+    await signIn("credentials", {
+      email: validatedData.email,
+      password: validatedData.password,
+      redirect: false,
+    });
+
+    return { status: "success" };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { status: "invalid_data" };
+    }
+
+    return { status: "failed" };
+  }
+};
+
+export interface RegisterActionState {
+  status:
+    | "idle"
+    | "in_progress"
+    | "success"
+    | "failed"
+    | "user_exists"
+    | "invalid_data";
+}
+
+export const register = async (
+  _: RegisterActionState,
+  formData: FormData,
+): Promise<RegisterActionState> => {
+  try {
+    const validatedData = authFormSchema.parse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+
+    let [user] = await getUser(validatedData.email);
+
+    if (user) {
+      return { status: "user_exists" } as RegisterActionState;
+    } else {
+      await createUser(validatedData.email, validatedData.password);
+      await signIn("credentials", {
+        email: validatedData.email,
+        password: validatedData.password,
+        redirect: false,
+      });
+
+      return { status: "success" };
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { status: "invalid_data" };
+    }
+
+    return { status: "failed" };
+  }
+};
+
+
+================================================
+File: /app/(auth)/auth.config.ts
+================================================
+import { NextAuthConfig } from "next-auth";
+
+export const authConfig = {
+  pages: {
+    signIn: "/login",
+    newUser: "/",
+  },
+  providers: [
+    // added later in auth.ts since it requires bcrypt which is only compatible with Node.js
+    // while this file is also used in non-Node.js environments
+  ],
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      let isLoggedIn = !!auth?.user;
+      let isOnChat = nextUrl.pathname.startsWith("/");
+      let isOnRegister = nextUrl.pathname.startsWith("/register");
+      let isOnLogin = nextUrl.pathname.startsWith("/login");
+
+      if (isLoggedIn && (isOnLogin || isOnRegister)) {
+        return Response.redirect(new URL("/", nextUrl));
+      }
+
+      if (isOnRegister || isOnLogin) {
+        return true; // Always allow access to register and login pages
+      }
+
+      if (isOnChat) {
+        if (isLoggedIn) return true;
+        return false; // Redirect unauthenticated users to login page
+      }
+
+      if (isLoggedIn) {
+        return Response.redirect(new URL("/", nextUrl));
+      }
+
+      return true;
+    },
+  },
+} satisfies NextAuthConfig;
+
+
+================================================
+File: /app/(auth)/auth.ts
+================================================
+import { compare } from "bcrypt-ts";
+import NextAuth, { User, Session } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+
+import { getUser } from "@/db/queries";
+
+import { authConfig } from "./auth.config";
+
+interface ExtendedSession extends Session {
+  user: User;
+}
+
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
+  ...authConfig,
+  providers: [
+    Credentials({
+      credentials: {},
+      async authorize({ email, password }: any) {
+        let users = await getUser(email);
+        if (users.length === 0) return null;
+        let passwordsMatch = await compare(password, users[0].password!);
+        if (passwordsMatch) return users[0] as any;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+
+      return token;
+    },
+    async session({
+      session,
+      token,
+    }: {
+      session: ExtendedSession;
+      token: any;
+    }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+
+      return session;
+    },
+  },
+});
+
+
+================================================
+File: /app/(auth)/api/auth/[...nextauth]/route.ts
+================================================
+export { GET, POST } from "@/app/(auth)/auth";
+
+
+================================================
+File: /app/(auth)/login/page.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { AuthForm } from "@/components/custom/auth-form";
+import { SubmitButton } from "@/components/custom/submit-button";
+
+import { login, LoginActionState } from "../actions";
+
+export default function Page() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+
+  const [state, formAction] = useActionState<LoginActionState, FormData>(
+    login,
+    {
+      status: "idle",
+    },
+  );
+
+  useEffect(() => {
+    if (state.status === "failed") {
+      toast.error("Invalid credentials!");
+    } else if (state.status === "invalid_data") {
+      toast.error("Failed validating your submission!");
+    } else if (state.status === "success") {
+      router.refresh();
+    }
+  }, [state.status, router]);
+
+  const handleSubmit = (formData: FormData) => {
+    setEmail(formData.get("email") as string);
+    formAction(formData);
+  };
+
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12">
+        <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
+          <h3 className="text-xl font-semibold dark:text-zinc-50">Sign In</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
+            Use your email and password to sign in
+          </p>
+        </div>
+        <AuthForm action={handleSubmit} defaultEmail={email}>
+          <SubmitButton>Sign in</SubmitButton>
+          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+            {"Don't have an account? "}
+            <Link
+              href="/register"
+              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+            >
+              Sign up
+            </Link>
+            {" for free."}
+          </p>
+        </AuthForm>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /app/(auth)/register/page.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { AuthForm } from "@/components/custom/auth-form";
+import { SubmitButton } from "@/components/custom/submit-button";
+
+import { register, RegisterActionState } from "../actions";
+
+export default function Page() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [state, formAction] = useActionState<RegisterActionState, FormData>(
+    register,
+    {
+      status: "idle",
+    },
+  );
+
+  useEffect(() => {
+    if (state.status === "user_exists") {
+      toast.error("Account already exists");
+    } else if (state.status === "failed") {
+      toast.error("Failed to create account");
+    } else if (state.status === "invalid_data") {
+      toast.error("Failed validating your submission!");
+    } else if (state.status === "success") {
+      toast.success("Account created successfully");
+      router.refresh();
+    }
+  }, [state, router]);
+
+  const handleSubmit = (formData: FormData) => {
+    setEmail(formData.get("email") as string);
+    formAction(formData);
+  };
+
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl gap-12 flex flex-col">
+        <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
+          <h3 className="text-xl font-semibold dark:text-zinc-50">Sign Up</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
+            Create an account with your email and password
+          </p>
+        </div>
+        <AuthForm action={handleSubmit} defaultEmail={email}>
+          <SubmitButton>Sign Up</SubmitButton>
+          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+            {"Already have an account? "}
+            <Link
+              href="/login"
+              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+            >
+              Sign in
+            </Link>
+            {" instead."}
+          </p>
+        </AuthForm>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /app/(chat)/page.tsx
+================================================
+import { Chat } from "@/components/custom/chat";
+import { generateUUID } from "@/lib/utils";
+
+export default async function Page() {
+  const id = generateUUID();
+  return <Chat key={id} id={id} initialMessages={[]} />;
+}
+
+
+================================================
+File: /app/(chat)/api/chat/route.ts
+================================================
+import { convertToCoreMessages, Message, streamText } from "ai";
+import { z } from "zod";
+
+import { geminiProModel } from "@/ai";
+import {
+  generateReservationPrice,
+  generateSampleFlightSearchResults,
+  generateSampleFlightStatus,
+  generateSampleSeatSelection,
+} from "@/ai/actions";
+import { auth } from "@/app/(auth)/auth";
+import {
+  createReservation,
+  deleteChatById,
+  getChatById,
+  getReservationById,
+  saveChat,
+} from "@/db/queries";
+import { generateUUID } from "@/lib/utils";
+
+export async function POST(request: Request) {
+  const { id, messages }: { id: string; messages: Array<Message> } =
+    await request.json();
+
+  const session = await auth();
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const coreMessages = convertToCoreMessages(messages).filter(
+    (message) => message.content.length > 0,
+  );
+
+  const result = await streamText({
+    model: geminiProModel,
+    system: `\n
+        - you help users book flights!
+        - keep your responses limited to a sentence.
+        - DO NOT output lists.
+        - after every tool call, pretend you're showing the result to the user and keep your response limited to a phrase.
+        - today's date is ${new Date().toLocaleDateString()}.
+        - ask follow up questions to nudge user into the optimal flow
+        - ask for any details you don't know, like name of passenger, etc.'
+        - C and D are aisle seats, A and F are window seats, B and E are middle seats
+        - assume the most popular airports for the origin and destination
+        - here's the optimal flow
+          - search for flights
+          - choose flight
+          - select seats
+          - create reservation (ask user whether to proceed with payment or change reservation)
+          - authorize payment (requires user consent, wait for user to finish payment and let you know when done)
+          - display boarding pass (DO NOT display boarding pass without verifying payment)
+        '
+      `,
+    messages: coreMessages,
+    tools: {
+      getWeather: {
+        description: "Get the current weather at a location",
+        parameters: z.object({
+          latitude: z.number().describe("Latitude coordinate"),
+          longitude: z.number().describe("Longitude coordinate"),
+        }),
+        execute: async ({ latitude, longitude }) => {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`,
+          );
+
+          const weatherData = await response.json();
+          return weatherData;
+        },
+      },
+      displayFlightStatus: {
+        description: "Display the status of a flight",
+        parameters: z.object({
+          flightNumber: z.string().describe("Flight number"),
+          date: z.string().describe("Date of the flight"),
+        }),
+        execute: async ({ flightNumber, date }) => {
+          const flightStatus = await generateSampleFlightStatus({
+            flightNumber,
+            date,
+          });
+
+          return flightStatus;
+        },
+      },
+      searchFlights: {
+        description: "Search for flights based on the given parameters",
+        parameters: z.object({
+          origin: z.string().describe("Origin airport or city"),
+          destination: z.string().describe("Destination airport or city"),
+        }),
+        execute: async ({ origin, destination }) => {
+          const results = await generateSampleFlightSearchResults({
+            origin,
+            destination,
+          });
+
+          return results;
+        },
+      },
+      selectSeats: {
+        description: "Select seats for a flight",
+        parameters: z.object({
+          flightNumber: z.string().describe("Flight number"),
+        }),
+        execute: async ({ flightNumber }) => {
+          const seats = await generateSampleSeatSelection({ flightNumber });
+          return seats;
+        },
+      },
+      createReservation: {
+        description: "Display pending reservation details",
+        parameters: z.object({
+          seats: z.string().array().describe("Array of selected seat numbers"),
+          flightNumber: z.string().describe("Flight number"),
+          departure: z.object({
+            cityName: z.string().describe("Name of the departure city"),
+            airportCode: z.string().describe("Code of the departure airport"),
+            timestamp: z.string().describe("ISO 8601 date of departure"),
+            gate: z.string().describe("Departure gate"),
+            terminal: z.string().describe("Departure terminal"),
+          }),
+          arrival: z.object({
+            cityName: z.string().describe("Name of the arrival city"),
+            airportCode: z.string().describe("Code of the arrival airport"),
+            timestamp: z.string().describe("ISO 8601 date of arrival"),
+            gate: z.string().describe("Arrival gate"),
+            terminal: z.string().describe("Arrival terminal"),
+          }),
+          passengerName: z.string().describe("Name of the passenger"),
+        }),
+        execute: async (props) => {
+          const { totalPriceInUSD } = await generateReservationPrice(props);
+          const session = await auth();
+
+          const id = generateUUID();
+
+          if (session && session.user && session.user.id) {
+            await createReservation({
+              id,
+              userId: session.user.id,
+              details: { ...props, totalPriceInUSD },
+            });
+
+            return { id, ...props, totalPriceInUSD };
+          } else {
+            return {
+              error: "User is not signed in to perform this action!",
+            };
+          }
+        },
+      },
+      authorizePayment: {
+        description:
+          "User will enter credentials to authorize payment, wait for user to repond when they are done",
+        parameters: z.object({
+          reservationId: z
+            .string()
+            .describe("Unique identifier for the reservation"),
+        }),
+        execute: async ({ reservationId }) => {
+          return { reservationId };
+        },
+      },
+      verifyPayment: {
+        description: "Verify payment status",
+        parameters: z.object({
+          reservationId: z
+            .string()
+            .describe("Unique identifier for the reservation"),
+        }),
+        execute: async ({ reservationId }) => {
+          const reservation = await getReservationById({ id: reservationId });
+
+          if (reservation.hasCompletedPayment) {
+            return { hasCompletedPayment: true };
+          } else {
+            return { hasCompletedPayment: false };
+          }
+        },
+      },
+      displayBoardingPass: {
+        description: "Display a boarding pass",
+        parameters: z.object({
+          reservationId: z
+            .string()
+            .describe("Unique identifier for the reservation"),
+          passengerName: z
+            .string()
+            .describe("Name of the passenger, in title case"),
+          flightNumber: z.string().describe("Flight number"),
+          seat: z.string().describe("Seat number"),
+          departure: z.object({
+            cityName: z.string().describe("Name of the departure city"),
+            airportCode: z.string().describe("Code of the departure airport"),
+            airportName: z.string().describe("Name of the departure airport"),
+            timestamp: z.string().describe("ISO 8601 date of departure"),
+            terminal: z.string().describe("Departure terminal"),
+            gate: z.string().describe("Departure gate"),
+          }),
+          arrival: z.object({
+            cityName: z.string().describe("Name of the arrival city"),
+            airportCode: z.string().describe("Code of the arrival airport"),
+            airportName: z.string().describe("Name of the arrival airport"),
+            timestamp: z.string().describe("ISO 8601 date of arrival"),
+            terminal: z.string().describe("Arrival terminal"),
+            gate: z.string().describe("Arrival gate"),
+          }),
+        }),
+        execute: async (boardingPass) => {
+          return boardingPass;
+        },
+      },
+    },
+    onFinish: async ({ responseMessages }) => {
+      if (session.user && session.user.id) {
+        try {
+          await saveChat({
+            id,
+            messages: [...coreMessages, ...responseMessages],
+            userId: session.user.id,
+          });
+        } catch (error) {
+          console.error("Failed to save chat");
+        }
+      }
+    },
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "stream-text",
+    },
+  });
+
+  return result.toDataStreamResponse({});
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const chat = await getChatById({ id });
+
+    if (chat.userId !== session.user.id) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    await deleteChatById({ id });
+
+    return new Response("Chat deleted", { status: 200 });
+  } catch (error) {
+    return new Response("An error occurred while processing your request", {
+      status: 500,
+    });
+  }
+}
+
+
+================================================
+File: /app/(chat)/api/files/upload/route.ts
+================================================
+import { put } from "@vercel/blob";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { auth } from "@/app/(auth)/auth";
+
+const FileSchema = z.object({
+  file: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, {
+      message: "File size should be less than 5MB",
+    })
+    .refine(
+      (file) =>
+        ["image/jpeg", "image/png", "application/pdf"].includes(file.type),
+      {
+        message: "File type should be JPEG, PNG, or PDF",
+      },
+    ),
+});
+
+export async function POST(request: Request) {
+  const session = await auth();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (request.body === null) {
+    return new Response("Request body is empty", { status: 400 });
+  }
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    const validatedFile = FileSchema.safeParse({ file });
+
+    if (!validatedFile.success) {
+      const errorMessage = validatedFile.error.errors
+        .map((error) => error.message)
+        .join(", ");
+
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+
+    const filename = file.name;
+    const fileBuffer = await file.arrayBuffer();
+
+    try {
+      const data = await put(`${filename}`, fileBuffer, {
+        access: "public",
+      });
+
+      return NextResponse.json(data);
+    } catch (error) {
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to process request" },
+      { status: 500 },
+    );
+  }
+}
+
+
+================================================
+File: /app/(chat)/api/history/route.ts
+================================================
+import { auth } from "@/app/(auth)/auth";
+import { getChatsByUserId } from "@/db/queries";
+
+export async function GET() {
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return Response.json("Unauthorized!", { status: 401 });
+  }
+
+  const chats = await getChatsByUserId({ id: session.user.id! });
+  return Response.json(chats);
+}
+
+
+================================================
+File: /app/(chat)/api/reservation/route.ts
+================================================
+import { auth } from "@/app/(auth)/auth";
+import { getReservationById, updateReservation } from "@/db/queries";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return new Response("Not Found!", { status: 404 });
+  }
+
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return new Response("Unauthorized!", { status: 401 });
+  }
+
+  try {
+    const reservation = await getReservationById({ id });
+
+    if (reservation.userId !== session.user.id) {
+      return new Response("Unauthorized!", { status: 401 });
+    }
+
+    return Response.json(reservation);
+  } catch (error) {
+    return new Response("An error occurred while processing your request!", {
+      status: 500,
+    });
+  }
+}
+
+export async function PATCH(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return new Response("Not Found!", { status: 404 });
+  }
+
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return new Response("Unauthorized!", { status: 401 });
+  }
+
+  try {
+    const reservation = await getReservationById({ id });
+
+    if (!reservation) {
+      return new Response("Reservation not found!", { status: 404 });
+    }
+
+    if (reservation.userId !== session.user.id) {
+      return new Response("Unauthorized!", { status: 401 });
+    }
+
+    if (reservation.hasCompletedPayment) {
+      return new Response("Reservation is already paid!", { status: 409 });
+    }
+
+    const { magicWord } = await request.json();
+
+    if (magicWord.toLowerCase() !== "vercel") {
+      return new Response("Invalid magic word!", { status: 400 });
+    }
+
+    const updatedReservation = await updateReservation({
+      id,
+      hasCompletedPayment: true,
+    });
+    return Response.json(updatedReservation);
+  } catch (error) {
+    console.error("Error updating reservation:", error);
+    return new Response("An error occurred while processing your request!", {
+      status: 500,
+    });
+  }
+}
+
+
+================================================
+File: /app/(chat)/chat/[id]/page.tsx
+================================================
+import { CoreMessage } from "ai";
+import { notFound } from "next/navigation";
+
+import { auth } from "@/app/(auth)/auth";
+import { Chat as PreviewChat } from "@/components/custom/chat";
+import { getChatById } from "@/db/queries";
+import { Chat } from "@/db/schema";
+import { convertToUIMessages } from "@/lib/utils";
+
+export default async function Page({ params }: { params: any }) {
+  const { id } = params;
+  const chatFromDb = await getChatById({ id });
+
+  if (!chatFromDb) {
+    notFound();
+  }
+
+  // type casting and converting messages to UI messages
+  const chat: Chat = {
+    ...chatFromDb,
+    messages: convertToUIMessages(chatFromDb.messages as Array<CoreMessage>),
+  };
+
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return notFound();
+  }
+
+  if (session.user.id !== chat.userId) {
+    return notFound();
+  }
+
+  return <PreviewChat id={chat.id} initialMessages={chat.messages} />;
+}
+
+
+================================================
+File: /components/custom/auth-form.tsx
+================================================
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+
+export function AuthForm({
+  action,
+  children,
+  defaultEmail = "",
+}: {
+  action: any;
+  children: React.ReactNode;
+  defaultEmail?: string;
+}) {
+  return (
+    <form action={action} className="flex flex-col gap-4 px-4 sm:px-16">
+      <div className="flex flex-col gap-2">
+        <Label
+          htmlFor="email"
+          className="text-zinc-600 font-normal dark:text-zinc-400"
+        >
+          Email Address
+        </Label>
+
+        <Input
+          id="email"
+          name="email"
+          className="bg-muted text-md md:text-sm border-none"
+          type="email"
+          placeholder="user@acme.com"
+          autoComplete="email"
+          required
+          defaultValue={defaultEmail}
+        />
+
+        <Label
+          htmlFor="password"
+          className="text-zinc-600 font-normal dark:text-zinc-400"
+        >
+          Password
+        </Label>
+
+        <Input
+          id="password"
+          name="password"
+          className="bg-muted text-md md:text-sm border-none"
+          type="password"
+          required
+        />
+      </div>
+
+      {children}
+    </form>
+  );
+}
+
+
+================================================
+File: /components/custom/chat.tsx
+================================================
+"use client";
+
+import { Attachment, Message } from "ai";
+import { useChat } from "ai/react";
+import { useState } from "react";
+
+import { Message as PreviewMessage } from "@/components/custom/message";
+import { useScrollToBottom } from "@/components/custom/use-scroll-to-bottom";
+
+import { MultimodalInput } from "./multimodal-input";
+import { Overview } from "./overview";
+
+export function Chat({
+  id,
+  initialMessages,
+}: {
+  id: string;
+  initialMessages: Array<Message>;
+}) {
+  const { messages, handleSubmit, input, setInput, append, isLoading, stop } =
+    useChat({
+      id,
+      body: { id },
+      initialMessages,
+      maxSteps: 10,
+      onFinish: () => {
+        window.history.replaceState({}, "", `/chat/${id}`);
+      },
+    });
+
+  const [messagesContainerRef, messagesEndRef] =
+    useScrollToBottom<HTMLDivElement>();
+
+  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+
+  return (
+    <div className="flex flex-row justify-center pb-4 md:pb-8 h-dvh bg-background">
+      <div className="flex flex-col justify-between items-center gap-4">
+        <div
+          ref={messagesContainerRef}
+          className="flex flex-col gap-4 h-full w-dvw items-center overflow-y-scroll"
+        >
+          {messages.length === 0 && <Overview />}
+
+          {messages.map((message) => (
+            <PreviewMessage
+              key={message.id}
+              chatId={id}
+              role={message.role}
+              content={message.content}
+              attachments={message.experimental_attachments}
+              toolInvocations={message.toolInvocations}
+            />
+          ))}
+
+          <div
+            ref={messagesEndRef}
+            className="shrink-0 min-w-[24px] min-h-[24px]"
+          />
+        </div>
+
+        <form className="flex flex-row gap-2 relative items-end w-full md:max-w-[500px] max-w-[calc(100dvw-32px) px-4 md:px-0">
+          <MultimodalInput
+            input={input}
+            setInput={setInput}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+            stop={stop}
+            attachments={attachments}
+            setAttachments={setAttachments}
+            messages={messages}
+            append={append}
+          />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/custom/history.tsx
+================================================
+"use client";
+
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import cx from "classnames";
+import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
+import { User } from "next-auth";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+
+import { Chat } from "@/db/schema";
+import { fetcher, getTitleFromChat } from "@/lib/utils";
+
+import {
+  InfoIcon,
+  MenuIcon,
+  MoreHorizontalIcon,
+  PencilEditIcon,
+  TrashIcon,
+} from "./icons";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
+
+export const History = ({ user }: { user: User | undefined }) => {
+  const { id } = useParams();
+  const pathname = usePathname();
+
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+  const {
+    data: history,
+    isLoading,
+    mutate,
+  } = useSWR<Array<Chat>>(user ? "/api/history" : null, fetcher, {
+    fallbackData: [],
+  });
+
+  useEffect(() => {
+    mutate();
+  }, [pathname, mutate]);
+
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const handleDelete = async () => {
+    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
+      method: "DELETE",
+    });
+
+    toast.promise(deletePromise, {
+      loading: "Deleting chat...",
+      success: () => {
+        mutate((history) => {
+          if (history) {
+            return history.filter((h) => h.id !== id);
+          }
+        });
+        return "Chat deleted successfully";
+      },
+      error: "Failed to delete chat",
+    });
+
+    setShowDeleteDialog(false);
+  };
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        className="p-1.5 h-fit"
+        onClick={() => {
+          setIsHistoryVisible(true);
+        }}
+      >
+        <MenuIcon />
+      </Button>
+
+      <Sheet
+        open={isHistoryVisible}
+        onOpenChange={(state) => {
+          setIsHistoryVisible(state);
+        }}
+      >
+        <SheetContent side="left" className="p-3 w-80 bg-muted">
+          <SheetHeader>
+            <VisuallyHidden.Root>
+              <SheetTitle className="text-left">History</SheetTitle>
+              <SheetDescription className="text-left">
+                {history === undefined ? "loading" : history.length} chats
+              </SheetDescription>
+            </VisuallyHidden.Root>
+          </SheetHeader>
+
+          <div className="text-sm flex flex-row items-center justify-between">
+            <div className="flex flex-row gap-2">
+              <div className="dark:text-zinc-300">History</div>
+
+              <div className="dark:text-zinc-400 text-zinc-500">
+                {history === undefined ? "loading" : history.length} chats
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-col">
+            {user && (
+              <Button
+                className="font-normal text-sm flex flex-row justify-between text-white"
+                asChild
+              >
+                <Link href="/">
+                  <div>Start a new chat</div>
+                  <PencilEditIcon size={14} />
+                </Link>
+              </Button>
+            )}
+
+            <div className="flex flex-col overflow-y-scroll p-1 h-[calc(100dvh-124px)]">
+              {!user ? (
+                <div className="text-zinc-500 h-dvh w-full flex flex-row justify-center items-center text-sm gap-2">
+                  <InfoIcon />
+                  <div>Login to save and revisit previous chats!</div>
+                </div>
+              ) : null}
+
+              {!isLoading && history?.length === 0 && user ? (
+                <div className="text-zinc-500 h-dvh w-full flex flex-row justify-center items-center text-sm gap-2">
+                  <InfoIcon />
+                  <div>No chats found</div>
+                </div>
+              ) : null}
+
+              {isLoading && user ? (
+                <div className="flex flex-col">
+                  {[44, 32, 28, 52].map((item) => (
+                    <div key={item} className="p-2 my-[2px]">
+                      <div
+                        className={`w-${item} h-[20px] rounded-md bg-zinc-200 dark:bg-zinc-600 animate-pulse`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {history &&
+                history.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={cx(
+                      "flex flex-row items-center gap-6 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md pr-2",
+                      { "bg-zinc-200 dark:bg-zinc-700": chat.id === id },
+                    )}
+                  >
+                    <Button
+                      variant="ghost"
+                      className={cx(
+                        "hover:bg-zinc-200 dark:hover:bg-zinc-700 justify-between p-0 text-sm font-normal flex flex-row items-center gap-2 pr-2 w-full transition-none",
+                      )}
+                      asChild
+                    >
+                      <Link
+                        href={`/chat/${chat.id}`}
+                        className="text-ellipsis overflow-hidden text-left py-2 pl-2 rounded-lg outline-zinc-900"
+                      >
+                        {getTitleFromChat(chat)}
+                      </Link>
+                    </Button>
+
+                    <DropdownMenu modal={true}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          className="p-0 h-fit font-normal text-zinc-500 transition-none hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          variant="ghost"
+                        >
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="left" className="z-[60]">
+                        <DropdownMenuItem asChild>
+                          <Button
+                            className="flex flex-row gap-2 items-center justify-start w-full h-fit font-normal p-1.5 rounded-sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setDeleteId(chat.id);
+                              setShowDeleteDialog(true);
+                            }}
+                          >
+                            <TrashIcon />
+                            <div>Delete</div>
+                          </Button>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              chat and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
+
+================================================
+File: /components/custom/icons.tsx
+================================================
+export const BotIcon = () => {
+  return (
+    <svg
+      height="16"
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width="16"
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8.75 2.79933C9.19835 2.53997 9.5 2.05521 9.5 1.5C9.5 0.671573 8.82843 0 8 0C7.17157 0 6.5 0.671573 6.5 1.5C6.5 2.05521 6.80165 2.53997 7.25 2.79933V5H7C4.027 5 1.55904 7.16229 1.08296 10H0V13H1V14.5V16H2.5H13.5H15V14.5V13H16V10H14.917C14.441 7.16229 11.973 5 9 5H8.75V2.79933ZM7 6.5C4.51472 6.5 2.5 8.51472 2.5 11V14.5H13.5V11C13.5 8.51472 11.4853 6.5 9 6.5H7ZM7.25 11.25C7.25 12.2165 6.4665 13 5.5 13C4.5335 13 3.75 12.2165 3.75 11.25C3.75 10.2835 4.5335 9.5 5.5 9.5C6.4665 9.5 7.25 10.2835 7.25 11.25ZM10.5 13C11.4665 13 12.25 12.2165 12.25 11.25C12.25 10.2835 11.4665 9.5 10.5 9.5C9.5335 9.5 8.75 10.2835 8.75 11.25C8.75 12.2165 9.5335 13 10.5 13Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const UserIcon = () => {
+  return (
+    <svg
+      data-testid="geist-icon"
+      height="16"
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width="16"
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M7.75 0C5.95507 0 4.5 1.45507 4.5 3.25V3.75C4.5 5.54493 5.95507 7 7.75 7H8.25C10.0449 7 11.5 5.54493 11.5 3.75V3.25C11.5 1.45507 10.0449 0 8.25 0H7.75ZM6 3.25C6 2.2835 6.7835 1.5 7.75 1.5H8.25C9.2165 1.5 10 2.2835 10 3.25V3.75C10 4.7165 9.2165 5.5 8.25 5.5H7.75C6.7835 5.5 6 4.7165 6 3.75V3.25ZM2.5 14.5V13.1709C3.31958 11.5377 4.99308 10.5 6.82945 10.5H9.17055C11.0069 10.5 12.6804 11.5377 13.5 13.1709V14.5H2.5ZM6.82945 9C4.35483 9 2.10604 10.4388 1.06903 12.6857L1 12.8353V13V15.25V16H1.75H14.25H15V15.25V13V12.8353L14.931 12.6857C13.894 10.4388 11.6452 9 9.17055 9H6.82945Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const AttachmentIcon = () => {
+  return (
+    <svg
+      height="16"
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width="16"
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M14.5 6.5V13.5C14.5 14.8807 13.3807 16 12 16H4C2.61929 16 1.5 14.8807 1.5 13.5V1.5V0H3H8H9.08579C9.351 0 9.60536 0.105357 9.79289 0.292893L14.2071 4.70711C14.3946 4.89464 14.5 5.149 14.5 5.41421V6.5ZM13 6.5V13.5C13 14.0523 12.5523 14.5 12 14.5H4C3.44772 14.5 3 14.0523 3 13.5V1.5H8V5V6.5H9.5H13ZM9.5 2.12132V5H12.3787L9.5 2.12132Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const VercelIcon = ({ size = 17 }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8 1L16 15H0L8 1Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const GitIcon = () => {
+  return (
+    <svg
+      height="16"
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width="16"
+      style={{ color: "currentcolor" }}
+    >
+      <g clipPath="url(#clip0_872_3147)">
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M8 0C3.58 0 0 3.57879 0 7.99729C0 11.5361 2.29 14.5251 5.47 15.5847C5.87 15.6547 6.02 15.4148 6.02 15.2049C6.02 15.0149 6.01 14.3851 6.01 13.7154C4 14.0852 3.48 13.2255 3.32 12.7757C3.23 12.5458 2.84 11.836 2.5 11.6461C2.22 11.4961 1.82 11.1262 2.49 11.1162C3.12 11.1062 3.57 11.696 3.72 11.936C4.44 13.1455 5.59 12.8057 6.05 12.5957C6.12 12.0759 6.33 11.726 6.56 11.5261C4.78 11.3262 2.92 10.6364 2.92 7.57743C2.92 6.70773 3.23 5.98797 3.74 5.42816C3.66 5.22823 3.38 4.40851 3.82 3.30888C3.82 3.30888 4.49 3.09895 6.02 4.1286C6.66 3.94866 7.34 3.85869 8.02 3.85869C8.7 3.85869 9.38 3.94866 10.02 4.1286C11.55 3.08895 12.22 3.30888 12.22 3.30888C12.66 4.40851 12.38 5.22823 12.3 5.42816C12.81 5.98797 13.12 6.69773 13.12 7.57743C13.12 10.6464 11.25 11.3262 9.47 11.5261C9.76 11.776 10.01 12.2558 10.01 13.0056C10.01 14.0752 10 14.9349 10 15.2049C10 15.4148 10.15 15.6647 10.55 15.5847C12.1381 15.0488 13.5182 14.0284 14.4958 12.6673C15.4735 11.3062 15.9996 9.67293 16 7.99729C16 3.57879 12.42 0 8 0Z"
+          fill="currentColor"
+        ></path>
+      </g>
+      <defs>
+        <clipPath id="clip0_872_3147">
+          <rect width="16" height="16" fill="white"></rect>
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};
+
+export const BoxIcon = ({ size = 16 }: { size: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8 0.154663L8.34601 0.334591L14.596 3.58459L15 3.79466V4.25V11.75V12.2053L14.596 12.4154L8.34601 15.6654L8 15.8453L7.65399 15.6654L1.40399 12.4154L1 12.2053V11.75V4.25V3.79466L1.40399 3.58459L7.65399 0.334591L8 0.154663ZM2.5 11.2947V5.44058L7.25 7.81559V13.7647L2.5 11.2947ZM8.75 13.7647L13.5 11.2947V5.44056L8.75 7.81556V13.7647ZM8 1.84534L12.5766 4.22519L7.99998 6.51352L3.42335 4.2252L8 1.84534Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const HomeIcon = ({ size = 16 }: { size: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12.5 6.56062L8.00001 2.06062L3.50001 6.56062V13.5L6.00001 13.5V11C6.00001 9.89539 6.89544 8.99996 8.00001 8.99996C9.10458 8.99996 10 9.89539 10 11V13.5L12.5 13.5V6.56062ZM13.78 5.71933L8.70711 0.646409C8.31659 0.255886 7.68342 0.255883 7.2929 0.646409L2.21987 5.71944C2.21974 5.71957 2.21961 5.7197 2.21949 5.71982L0.469676 7.46963L-0.0606537 7.99996L1.00001 9.06062L1.53034 8.53029L2.00001 8.06062V14.25V15H2.75001L6.00001 15H7.50001H8.50001H10L13.25 15H14V14.25V8.06062L14.4697 8.53029L15 9.06062L16.0607 7.99996L15.5303 7.46963L13.7806 5.71993C13.7804 5.71973 13.7802 5.71953 13.78 5.71933ZM8.50001 11V13.5H7.50001V11C7.50001 10.7238 7.72386 10.5 8.00001 10.5C8.27615 10.5 8.50001 10.7238 8.50001 11Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const GPSIcon = ({ size = 16 }: { size: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        d="M1 6L15 1L10 15L7.65955 8.91482C7.55797 8.65073 7.34927 8.44203 7.08518 8.34045L1 6Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="bevel"
+        fill="transparent"
+      ></path>
+    </svg>
+  );
+};
+
+export const InvoiceIcon = ({ size = 16 }: { size: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M13 15.1L12 14.5L10.1524 15.8857C10.0621 15.9534 9.93791 15.9534 9.8476 15.8857L8 14.5L6.14377 15.8922C6.05761 15.9568 5.94008 15.9601 5.85047 15.9003L3.75 14.5L3 15L2.83257 15.1116L1.83633 15.7758L1.68656 15.8756C1.60682 15.9288 1.5 15.8716 1.5 15.7758V15.5958V14.3985V14.1972V1.5V0H3H8H9.08579C9.351 0 9.60536 0.105357 9.79289 0.292893L14.2071 4.70711C14.3946 4.89464 14.5 5.149 14.5 5.41421V6.5V14.2507V14.411V15.5881V15.7881C14.5 15.8813 14.3982 15.9389 14.3183 15.891L14.1468 15.7881L13.1375 15.1825L13 15.1ZM12.3787 5L9.5 2.12132V5H12.3787ZM8 1.5V5V6.5H9.5H13V13.3507L12.7717 13.2138L11.9069 12.6948L11.1 13.3L10 14.125L8.9 13.3L8 12.625L7.1 13.3L5.94902 14.1632L4.58205 13.2519L3.75 12.6972L3 13.1972V1.5H8Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const LogoOpenAI = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        d="M14.9449 6.54871C15.3128 5.45919 15.1861 4.26567 14.5978 3.27464C13.7131 1.75461 11.9345 0.972595 10.1974 1.3406C9.42464 0.481584 8.3144 -0.00692594 7.15045 7.42132e-05C5.37487 -0.00392587 3.79946 1.1241 3.2532 2.79113C2.11256 3.02164 1.12799 3.72615 0.551837 4.72468C-0.339497 6.24071 -0.1363 8.15175 1.05451 9.45178C0.686626 10.5413 0.813308 11.7348 1.40162 12.7258C2.28637 14.2459 4.06498 15.0279 5.80204 14.6599C6.5743 15.5189 7.68504 16.0074 8.849 15.9999C10.6256 16.0044 12.2015 14.8754 12.7478 13.2069C13.8884 12.9764 14.873 12.2718 15.4491 11.2733C16.3394 9.75728 16.1357 7.84774 14.9454 6.54771L14.9449 6.54871ZM8.85001 14.9544C8.13907 14.9554 7.45043 14.7099 6.90468 14.2604C6.92951 14.2474 6.97259 14.2239 7.00046 14.2069L10.2293 12.3668C10.3945 12.2743 10.4959 12.1008 10.4949 11.9133V7.42173L11.8595 8.19925C11.8742 8.20625 11.8838 8.22025 11.8858 8.23625V11.9558C11.8838 13.6099 10.5263 14.9509 8.85001 14.9544ZM2.32133 12.2028C1.9651 11.5958 1.8369 10.8843 1.95902 10.1938C1.98284 10.2078 2.02489 10.2333 2.05479 10.2503L5.28366 12.0903C5.44733 12.1848 5.65003 12.1848 5.81421 12.0903L9.75604 9.84429V11.3993C9.75705 11.4153 9.74945 11.4308 9.73678 11.4408L6.47295 13.3004C5.01915 14.1264 3.1625 13.6354 2.32184 12.2028H2.32133ZM1.47155 5.24819C1.82626 4.64017 2.38619 4.17516 3.05305 3.93366C3.05305 3.96116 3.05152 4.00966 3.05152 4.04366V7.72424C3.05051 7.91124 3.15186 8.08475 3.31654 8.17725L7.25838 10.4228L5.89376 11.2003C5.88008 11.2093 5.86285 11.2108 5.84765 11.2043L2.58331 9.34327C1.13255 8.51426 0.63494 6.68272 1.47104 5.24869L1.47155 5.24819ZM12.6834 7.82274L8.74157 5.57669L10.1062 4.79968C10.1199 4.79068 10.1371 4.78918 10.1523 4.79568L13.4166 6.65522C14.8699 7.48373 15.3681 9.31827 14.5284 10.7523C14.1732 11.3593 13.6138 11.8243 12.9474 12.0663V8.27575C12.9489 8.08875 12.8481 7.91574 12.6839 7.82274H12.6834ZM14.0414 5.8057C14.0176 5.7912 13.9756 5.7662 13.9457 5.7492L10.7168 3.90916C10.5531 3.81466 10.3504 3.81466 10.1863 3.90916L6.24442 6.15521V4.60017C6.2434 4.58417 6.251 4.56867 6.26367 4.55867L9.52751 2.70063C10.9813 1.87311 12.84 2.36563 13.6781 3.80066C14.0323 4.40667 14.1605 5.11618 14.0404 5.8057H14.0414ZM5.50257 8.57726L4.13744 7.79974C4.12275 7.79274 4.11312 7.77874 4.11109 7.76274V4.04316C4.11211 2.38713 5.47368 1.0451 7.15197 1.0461C7.86189 1.0461 8.54902 1.2921 9.09476 1.74011C9.06993 1.75311 9.02737 1.77661 8.99899 1.79361L5.77012 3.63365C5.60493 3.72615 5.50358 3.89916 5.50459 4.08666L5.50257 8.57626V8.57726ZM6.24391 7.00022L7.99972 5.9997L9.75553 6.99972V9.00027L7.99972 10.0003L6.24391 9.00027V7.00022Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const LogoGoogle = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      data-testid="geist-icon"
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        d="M8.15991 6.54543V9.64362H12.4654C12.2763 10.64 11.709 11.4837 10.8581 12.0509L13.4544 14.0655C14.9671 12.6692 15.8399 10.6182 15.8399 8.18188C15.8399 7.61461 15.789 7.06911 15.6944 6.54552L8.15991 6.54543Z"
+        fill="#4285F4"
+      ></path>
+      <path
+        d="M3.6764 9.52268L3.09083 9.97093L1.01807 11.5855C2.33443 14.1963 5.03241 16 8.15966 16C10.3196 16 12.1305 15.2873 13.4542 14.0655L10.8578 12.0509C10.1451 12.5309 9.23598 12.8219 8.15966 12.8219C6.07967 12.8219 4.31245 11.4182 3.67967 9.5273L3.6764 9.52268Z"
+        fill="#34A853"
+      ></path>
+      <path
+        d="M1.01803 4.41455C0.472607 5.49087 0.159912 6.70543 0.159912 7.99995C0.159912 9.29447 0.472607 10.509 1.01803 11.5854C1.01803 11.5926 3.6799 9.51991 3.6799 9.51991C3.5199 9.03991 3.42532 8.53085 3.42532 7.99987C3.42532 7.46889 3.5199 6.95983 3.6799 6.47983L1.01803 4.41455Z"
+        fill="#FBBC05"
+      ></path>
+      <path
+        d="M8.15982 3.18545C9.33802 3.18545 10.3853 3.59271 11.2216 4.37818L13.5125 2.0873C12.1234 0.792777 10.3199 0 8.15982 0C5.03257 0 2.33443 1.79636 1.01807 4.41455L3.67985 6.48001C4.31254 4.58908 6.07983 3.18545 8.15982 3.18545Z"
+        fill="#EA4335"
+      ></path>
+    </svg>
+  );
+};
+
+export const LogoAnthropic = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      x="0px"
+      y="0px"
+      viewBox="0 0 92.2 65"
+      style={{ color: "currentcolor", fill: "currentcolor" }}
+      width="18px"
+      height="18px"
+    >
+      <path
+        d="M66.5,0H52.4l25.7,65h14.1L66.5,0z M25.7,0L0,65h14.4l5.3-13.6h26.9L51.8,65h14.4L40.5,0C40.5,0,25.7,0,25.7,0z
+		M24.3,39.3l8.8-22.8l8.8,22.8H24.3z"
+      ></path>
+    </svg>
+  );
+};
+
+export const RouteIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M7.53033 0.719661L7 0.189331L5.93934 1.24999L6.46967 1.78032L6.68934 1.99999H3.375C1.51104 1.99999 0 3.51103 0 5.37499C0 7.23895 1.51104 8.74999 3.375 8.74999H12.625C13.6605 8.74999 14.5 9.58946 14.5 10.625C14.5 11.6605 13.6605 12.5 12.625 12.5H4.88555C4.56698 11.4857 3.61941 10.75 2.5 10.75C1.11929 10.75 0 11.8693 0 13.25C0 14.6307 1.11929 15.75 2.5 15.75C3.61941 15.75 4.56698 15.0143 4.88555 14H12.625C14.489 14 16 12.489 16 10.625C16 8.76103 14.489 7.24999 12.625 7.24999H3.375C2.33947 7.24999 1.5 6.41052 1.5 5.37499C1.5 4.33946 2.33947 3.49999 3.375 3.49999H6.68934L6.46967 3.71966L5.93934 4.24999L7 5.31065L7.53033 4.78032L8.85355 3.4571C9.24408 3.06657 9.24408 2.43341 8.85355 2.04288L7.53033 0.719661ZM2.5 14.25C3.05228 14.25 3.5 13.8023 3.5 13.25C3.5 12.6977 3.05228 12.25 2.5 12.25C1.94772 12.25 1.5 12.6977 1.5 13.25C1.5 13.8023 1.94772 14.25 2.5 14.25ZM14.5 2.74999C14.5 3.30228 14.0523 3.74999 13.5 3.74999C12.9477 3.74999 12.5 3.30228 12.5 2.74999C12.5 2.19771 12.9477 1.74999 13.5 1.74999C14.0523 1.74999 14.5 2.19771 14.5 2.74999ZM16 2.74999C16 4.1307 14.8807 5.24999 13.5 5.24999C12.1193 5.24999 11 4.1307 11 2.74999C11 1.36928 12.1193 0.249991 13.5 0.249991C14.8807 0.249991 16 1.36928 16 2.74999Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const FileIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M14.5 13.5V6.5V5.41421C14.5 5.149 14.3946 4.89464 14.2071 4.70711L9.79289 0.292893C9.60536 0.105357 9.351 0 9.08579 0H8H3H1.5V1.5V13.5C1.5 14.8807 2.61929 16 4 16H12C13.3807 16 14.5 14.8807 14.5 13.5ZM13 13.5V6.5H9.5H8V5V1.5H3V13.5C3 14.0523 3.44772 14.5 4 14.5H12C12.5523 14.5 13 14.0523 13 13.5ZM9.5 5V2.12132L12.3787 5H9.5ZM5.13 5.00062H4.505V6.25062H5.13H6H6.625V5.00062H6H5.13ZM4.505 8H5.13H11H11.625V9.25H11H5.13H4.505V8ZM5.13 11H4.505V12.25H5.13H11H11.625V11H11H5.13Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const LoaderIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <g clipPath="url(#clip0_2393_1490)">
+        <path d="M8 0V4" stroke="currentColor" strokeWidth="1.5"></path>
+        <path
+          opacity="0.5"
+          d="M8 16V12"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.9"
+          d="M3.29773 1.52783L5.64887 4.7639"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.1"
+          d="M12.7023 1.52783L10.3511 4.7639"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.4"
+          d="M12.7023 14.472L10.3511 11.236"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.6"
+          d="M3.29773 14.472L5.64887 11.236"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.2"
+          d="M15.6085 5.52783L11.8043 6.7639"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.7"
+          d="M0.391602 10.472L4.19583 9.23598"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.3"
+          d="M15.6085 10.4722L11.8043 9.2361"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+        <path
+          opacity="0.8"
+          d="M0.391602 5.52783L4.19583 6.7639"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        ></path>
+      </g>
+      <defs>
+        <clipPath id="clip0_2393_1490">
+          <rect width="16" height="16" fill="white"></rect>
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};
+
+export const UploadIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      data-testid="geist-icon"
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M1.5 4.875C1.5 3.01104 3.01104 1.5 4.875 1.5C6.20018 1.5 7.34838 2.26364 7.901 3.37829C8.1902 3.96162 8.79547 4.5 9.60112 4.5H12.25C13.4926 4.5 14.5 5.50736 14.5 6.75C14.5 7.42688 14.202 8.03329 13.7276 8.44689L13.1622 8.93972L14.1479 10.0704L14.7133 9.57758C15.5006 8.89123 16 7.8785 16 6.75C16 4.67893 14.3211 3 12.25 3H9.60112C9.51183 3 9.35322 2.93049 9.2449 2.71201C8.44888 1.1064 6.79184 0 4.875 0C2.18261 0 0 2.18261 0 4.875V6.40385C0 7.69502 0.598275 8.84699 1.52982 9.59656L2.11415 10.0667L3.0545 8.89808L2.47018 8.42791C1.87727 7.95083 1.5 7.22166 1.5 6.40385V4.875ZM7.29289 7.39645C7.68342 7.00592 8.31658 7.00592 8.70711 7.39645L11.7803 10.4697L12.3107 11L11.25 12.0607L10.7197 11.5303L8.75 9.56066V15.25V16H7.25V15.25V9.56066L5.28033 11.5303L4.75 12.0607L3.68934 11L4.21967 10.4697L7.29289 7.39645Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const MenuIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M1 2H1.75H14.25H15V3.5H14.25H1.75H1V2ZM1 12.5H1.75H14.25H15V14H14.25H1.75H1V12.5ZM1.75 7.25H1V8.75H1.75H14.25H15V7.25H14.25H1.75Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const PencilEditIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M11.75 0.189331L12.2803 0.719661L15.2803 3.71966L15.8107 4.24999L15.2803 4.78032L5.15901 14.9016C4.45575 15.6049 3.50192 16 2.50736 16H0.75H0V15.25V13.4926C0 12.4981 0.395088 11.5442 1.09835 10.841L11.2197 0.719661L11.75 0.189331ZM11.75 2.31065L9.81066 4.24999L11.75 6.18933L13.6893 4.24999L11.75 2.31065ZM2.15901 11.9016L8.75 5.31065L10.6893 7.24999L4.09835 13.841C3.67639 14.2629 3.1041 14.5 2.50736 14.5H1.5V13.4926C1.5 12.8959 1.73705 12.3236 2.15901 11.9016ZM9 16H16V14.5H9V16Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const CheckedSquare = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M15 16H1C0.447715 16 0 15.5523 0 15V1C0 0.447715 0.447716 0 1 0L15 8.17435e-06C15.5523 8.47532e-06 16 0.447724 16 1.00001V15C16 15.5523 15.5523 16 15 16ZM11.7803 6.28033L12.3107 5.75L11.25 4.68934L10.7197 5.21967L6.5 9.43935L5.28033 8.21967L4.75001 7.68934L3.68934 8.74999L4.21967 9.28033L5.96967 11.0303C6.11032 11.171 6.30109 11.25 6.5 11.25C6.69891 11.25 6.88968 11.171 7.03033 11.0303L11.7803 6.28033Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const UncheckedSquare = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <rect
+        x="1"
+        y="1"
+        width="14"
+        height="14"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
+    </svg>
+  );
+};
+
+export const MoreIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8 4C7.17157 4 6.5 3.32843 6.5 2.5C6.5 1.67157 7.17157 1 8 1C8.82843 1 9.5 1.67157 9.5 2.5C9.5 3.32843 8.82843 4 8 4ZM8 9.5C7.17157 9.5 6.5 8.82843 6.5 8C6.5 7.17157 7.17157 6.5 8 6.5C8.82843 6.5 9.5 7.17157 9.5 8C9.5 8.82843 8.82843 9.5 8 9.5ZM6.5 13.5C6.5 14.3284 7.17157 15 8 15C8.82843 15 9.5 14.3284 9.5 13.5C9.5 12.6716 8.82843 12 8 12C7.17157 12 6.5 12.6716 6.5 13.5Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const TrashIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.75 2.75C6.75 2.05964 7.30964 1.5 8 1.5C8.69036 1.5 9.25 2.05964 9.25 2.75V3H6.75V2.75ZM5.25 3V2.75C5.25 1.23122 6.48122 0 8 0C9.51878 0 10.75 1.23122 10.75 2.75V3H12.9201H14.25H15V4.5H14.25H13.8846L13.1776 13.6917C13.0774 14.9942 11.9913 16 10.6849 16H5.31508C4.00874 16 2.92263 14.9942 2.82244 13.6917L2.11538 4.5H1.75H1V3H1.75H3.07988H5.25ZM4.31802 13.5767L3.61982 4.5H12.3802L11.682 13.5767C11.6419 14.0977 11.2075 14.5 10.6849 14.5H5.31508C4.79254 14.5 4.3581 14.0977 4.31802 13.5767Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const InfoIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM6.25002 7H7.00002H7.75C8.30229 7 8.75 7.44772 8.75 8V11.5V12.25H7.25V11.5V8.5H7.00002H6.25002V7ZM8 6C8.55229 6 9 5.55228 9 5C9 4.44772 8.55229 4 8 4C7.44772 4 7 4.44772 7 5C7 5.55228 7.44772 6 8 6Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const ArrowUpIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8.70711 1.39644C8.31659 1.00592 7.68342 1.00592 7.2929 1.39644L2.21968 6.46966L1.68935 6.99999L2.75001 8.06065L3.28034 7.53032L7.25001 3.56065V14.25V15H8.75001V14.25V3.56065L12.7197 7.53032L13.25 8.06065L14.3107 6.99999L13.7803 6.46966L8.70711 1.39644Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const StopIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M3 3H13V13H3V3Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const PaperclipIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+      className="-rotate-45"
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M10.8591 1.70735C10.3257 1.70735 9.81417 1.91925 9.437 2.29643L3.19455 8.53886C2.56246 9.17095 2.20735 10.0282 2.20735 10.9222C2.20735 11.8161 2.56246 12.6734 3.19455 13.3055C3.82665 13.9376 4.68395 14.2927 5.57786 14.2927C6.47178 14.2927 7.32908 13.9376 7.96117 13.3055L14.2036 7.06304L14.7038 6.56287L15.7041 7.56321L15.204 8.06337L8.96151 14.3058C8.06411 15.2032 6.84698 15.7074 5.57786 15.7074C4.30875 15.7074 3.09162 15.2032 2.19422 14.3058C1.29682 13.4084 0.792664 12.1913 0.792664 10.9222C0.792664 9.65305 1.29682 8.43592 2.19422 7.53852L8.43666 1.29609C9.07914 0.653606 9.95054 0.292664 10.8591 0.292664C11.7678 0.292664 12.6392 0.653606 13.2816 1.29609C13.9241 1.93857 14.2851 2.80997 14.2851 3.71857C14.2851 4.62718 13.9241 5.49858 13.2816 6.14106L13.2814 6.14133L7.0324 12.3835C7.03231 12.3836 7.03222 12.3837 7.03213 12.3838C6.64459 12.7712 6.11905 12.9888 5.57107 12.9888C5.02297 12.9888 4.49731 12.7711 4.10974 12.3835C3.72217 11.9959 3.50444 11.4703 3.50444 10.9222C3.50444 10.3741 3.72217 9.8484 4.10974 9.46084L4.11004 9.46054L9.877 3.70039L10.3775 3.20051L11.3772 4.20144L10.8767 4.70131L5.11008 10.4612C5.11005 10.4612 5.11003 10.4612 5.11 10.4613C4.98779 10.5835 4.91913 10.7493 4.91913 10.9222C4.91913 11.0951 4.98782 11.2609 5.11008 11.3832C5.23234 11.5054 5.39817 11.5741 5.57107 11.5741C5.74398 11.5741 5.9098 11.5054 6.03206 11.3832L6.03233 11.3829L12.2813 5.14072C12.2814 5.14063 12.2815 5.14054 12.2816 5.14045C12.6586 4.7633 12.8704 4.25185 12.8704 3.71857C12.8704 3.18516 12.6585 2.6736 12.2813 2.29643C11.9041 1.91925 11.3926 1.70735 10.8591 1.70735Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const MoreHorizontalIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M4 8C4 8.82843 3.32843 9.5 2.5 9.5C1.67157 9.5 1 8.82843 1 8C1 7.17157 1.67157 6.5 2.5 6.5C3.32843 6.5 4 7.17157 4 8ZM9.5 8C9.5 8.82843 8.82843 9.5 8 9.5C7.17157 9.5 6.5 8.82843 6.5 8C6.5 7.17157 7.17157 6.5 8 6.5C8.82843 6.5 9.5 7.17157 9.5 8ZM13.5 9.5C14.3284 9.5 15 8.82843 15 8C15 7.17157 14.3284 6.5 13.5 6.5C12.6716 6.5 12 7.17157 12 8C12 8.82843 12.6716 9.5 13.5 9.5Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const MessageIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M2.8914 10.4028L2.98327 10.6318C3.22909 11.2445 3.5 12.1045 3.5 13C3.5 13.3588 3.4564 13.7131 3.38773 14.0495C3.69637 13.9446 4.01409 13.8159 4.32918 13.6584C4.87888 13.3835 5.33961 13.0611 5.70994 12.7521L6.22471 12.3226L6.88809 12.4196C7.24851 12.4724 7.61994 12.5 8 12.5C11.7843 12.5 14.5 9.85569 14.5 7C14.5 4.14431 11.7843 1.5 8 1.5C4.21574 1.5 1.5 4.14431 1.5 7C1.5 8.18175 1.94229 9.29322 2.73103 10.2153L2.8914 10.4028ZM2.8135 15.7653C1.76096 16 1 16 1 16C1 16 1.43322 15.3097 1.72937 14.4367C1.88317 13.9834 2 13.4808 2 13C2 12.3826 1.80733 11.7292 1.59114 11.1903C0.591845 10.0221 0 8.57152 0 7C0 3.13401 3.58172 0 8 0C12.4183 0 16 3.13401 16 7C16 10.866 12.4183 14 8 14C7.54721 14 7.10321 13.9671 6.67094 13.9038C6.22579 14.2753 5.66881 14.6656 5 15C4.23366 15.3832 3.46733 15.6195 2.8135 15.7653Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const SlashIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    height={size}
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width={size}
+    style={{ color: "currentcolor" }}
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M4.01526 15.3939L4.3107 14.7046L10.3107 0.704556L10.6061 0.0151978L11.9849 0.606077L11.6894 1.29544L5.68942 15.2954L5.39398 15.9848L4.01526 15.3939Z"
+      fill="currentColor"
+    ></path>
+  </svg>
+);
+
+export const ArrowUpRightIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M5.75001 2H5.00001V3.5H5.75001H11.4393L2.21968 12.7197L1.68935 13.25L2.75001 14.3107L3.28034 13.7803L12.4988 4.56182V10.25V11H13.9988V10.25V3C13.9988 2.44772 13.5511 2 12.9988 2H5.75001Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const ArrowDownRightIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12.4994 11.4399V5.74999V4.99999H13.9994V5.74999V12.9994C13.9994 13.5517 13.5517 13.9994 12.9994 13.9994H5.74999H4.99999V12.4994H5.74999H11.4376L2.21908 3.28092L1.68875 2.75059L2.74941 1.68993L3.27974 2.22026L12.4994 11.4399Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const ArrowUpRightSmallIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.75011 4H6.00011V5.5H6.75011H9.43945L5.46978 9.46967L4.93945 10L6.00011 11.0607L6.53044 10.5303L10.499 6.56182V9.25V10H11.999V9.25V5C11.999 4.44772 11.5512 4 10.999 4H6.75011Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+export const CheckCircle = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: "currentcolor" }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM11.5303 6.53033L12.0607 6L11 4.93934L10.4697 5.46967L6.5 9.43934L5.53033 8.46967L5 7.93934L3.93934 9L4.46967 9.53033L5.96967 11.0303C6.26256 11.3232 6.73744 11.3232 7.03033 11.0303L11.5303 6.53033Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+
+
+================================================
+File: /components/custom/markdown.tsx
+================================================
+import Link from "next/link";
+import React, { memo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+const NonMemoizedMarkdown = ({ children }: { children: string }) => {
+  const components = {
+    code: ({ node, inline, className, children, ...props }: any) => {
+      const match = /language-(\w+)/.exec(className || "");
+      return !inline && match ? (
+        <pre
+          {...props}
+          className={`${className} text-sm w-[80dvw] md:max-w-[500px] overflow-x-scroll bg-zinc-100 p-3 rounded-lg mt-2 dark:bg-zinc-800`}
+        >
+          <code className={match[1]}>{children}</code>
+        </pre>
+      ) : (
+        <code
+          className={`${className} text-sm bg-zinc-100 dark:bg-zinc-800 py-0.5 px-1 rounded-md`}
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    },
+    ol: ({ node, children, ...props }: any) => {
+      return (
+        <ol className="list-decimal list-outside ml-4" {...props}>
+          {children}
+        </ol>
+      );
+    },
+    li: ({ node, children, ...props }: any) => {
+      return (
+        <li className="py-1" {...props}>
+          {children}
+        </li>
+      );
+    },
+    ul: ({ node, children, ...props }: any) => {
+      return (
+        <ul className="list-decimal list-outside ml-4" {...props}>
+          {children}
+        </ul>
+      );
+    },
+    strong: ({ node, children, ...props }: any) => {
+      return (
+        <span className="font-semibold" {...props}>
+          {children}
+        </span>
+      );
+    },
+    a: ({ node, children, ...props }: any) => {
+      return (
+        <Link
+          className="text-blue-500 hover:underline"
+          target="_blank"
+          rel="noreferrer"
+          {...props}
+        >
+          {children}
+        </Link>
+      );
+    },
+  };
+
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      {children}
+    </ReactMarkdown>
+  );
+};
+
+export const Markdown = memo(
+  NonMemoizedMarkdown,
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
+);
+
+
+================================================
+File: /components/custom/message.tsx
+================================================
+"use client";
+
+import { Attachment, ToolInvocation } from "ai";
+import { motion } from "framer-motion";
+import { ReactNode } from "react";
+
+import { BotIcon, UserIcon } from "./icons";
+import { Markdown } from "./markdown";
+import { PreviewAttachment } from "./preview-attachment";
+import { Weather } from "./weather";
+import { AuthorizePayment } from "../flights/authorize-payment";
+import { DisplayBoardingPass } from "../flights/boarding-pass";
+import { CreateReservation } from "../flights/create-reservation";
+import { FlightStatus } from "../flights/flight-status";
+import { ListFlights } from "../flights/list-flights";
+import { SelectSeats } from "../flights/select-seats";
+import { VerifyPayment } from "../flights/verify-payment";
+
+export const Message = ({
+  chatId,
+  role,
+  content,
+  toolInvocations,
+  attachments,
+}: {
+  chatId: string;
+  role: string;
+  content: string | ReactNode;
+  toolInvocations: Array<ToolInvocation> | undefined;
+  attachments?: Array<Attachment>;
+}) => {
+  return (
+    <motion.div
+      className={`flex flex-row gap-4 px-4 w-full md:w-[500px] md:px-0 first-of-type:pt-20`}
+      initial={{ y: 5, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+    >
+      <div className="size-[24px] border rounded-sm p-1 flex flex-col justify-center items-center shrink-0 text-zinc-500">
+        {role === "assistant" ? <BotIcon /> : <UserIcon />}
+      </div>
+
+      <div className="flex flex-col gap-2 w-full">
+        {content && typeof content === "string" && (
+          <div className="text-zinc-800 dark:text-zinc-300 flex flex-col gap-4">
+            <Markdown>{content}</Markdown>
+          </div>
+        )}
+
+        {toolInvocations && (
+          <div className="flex flex-col gap-4">
+            {toolInvocations.map((toolInvocation) => {
+              const { toolName, toolCallId, state } = toolInvocation;
+
+              if (state === "result") {
+                const { result } = toolInvocation;
+
+                return (
+                  <div key={toolCallId}>
+                    {toolName === "getWeather" ? (
+                      <Weather weatherAtLocation={result} />
+                    ) : toolName === "displayFlightStatus" ? (
+                      <FlightStatus flightStatus={result} />
+                    ) : toolName === "searchFlights" ? (
+                      <ListFlights chatId={chatId} results={result} />
+                    ) : toolName === "selectSeats" ? (
+                      <SelectSeats chatId={chatId} availability={result} />
+                    ) : toolName === "createReservation" ? (
+                      Object.keys(result).includes("error") ? null : (
+                        <CreateReservation reservation={result} />
+                      )
+                    ) : toolName === "authorizePayment" ? (
+                      <AuthorizePayment intent={result} />
+                    ) : toolName === "displayBoardingPass" ? (
+                      <DisplayBoardingPass boardingPass={result} />
+                    ) : toolName === "verifyPayment" ? (
+                      <VerifyPayment result={result} />
+                    ) : (
+                      <div>{JSON.stringify(result, null, 2)}</div>
+                    )}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={toolCallId} className="skeleton">
+                    {toolName === "getWeather" ? (
+                      <Weather />
+                    ) : toolName === "displayFlightStatus" ? (
+                      <FlightStatus />
+                    ) : toolName === "searchFlights" ? (
+                      <ListFlights chatId={chatId} />
+                    ) : toolName === "selectSeats" ? (
+                      <SelectSeats chatId={chatId} />
+                    ) : toolName === "createReservation" ? (
+                      <CreateReservation />
+                    ) : toolName === "authorizePayment" ? (
+                      <AuthorizePayment />
+                    ) : toolName === "displayBoardingPass" ? (
+                      <DisplayBoardingPass />
+                    ) : null}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        )}
+
+        {attachments && (
+          <div className="flex flex-row gap-2">
+            {attachments.map((attachment) => (
+              <PreviewAttachment key={attachment.url} attachment={attachment} />
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+
+================================================
+File: /components/custom/multimodal-input.tsx
+================================================
+"use client";
+
+import { Attachment, ChatRequestOptions, CreateMessage, Message } from "ai";
+import { motion } from "framer-motion";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  Dispatch,
+  SetStateAction,
+  ChangeEvent,
+} from "react";
+import { toast } from "sonner";
+
+import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
+import { PreviewAttachment } from "./preview-attachment";
+import useWindowSize from "./use-window-size";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+
+const suggestedActions = [
+  {
+    title: "Help me book a flight",
+    label: "from San Francisco to London",
+    action: "Help me book a flight from San Francisco to London",
+  },
+  {
+    title: "What is the status",
+    label: "of flight BA142 flying tmrw?",
+    action: "What is the status of flight BA142 flying tmrw?",
+  },
+];
+
+export function MultimodalInput({
+  input,
+  setInput,
+  isLoading,
+  stop,
+  attachments,
+  setAttachments,
+  messages,
+  append,
+  handleSubmit,
+}: {
+  input: string;
+  setInput: (value: string) => void;
+  isLoading: boolean;
+  stop: () => void;
+  attachments: Array<Attachment>;
+  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
+  messages: Array<Message>;
+  append: (
+    message: Message | CreateMessage,
+    chatRequestOptions?: ChatRequestOptions,
+  ) => Promise<string | null | undefined>;
+  handleSubmit: (
+    event?: {
+      preventDefault?: () => void;
+    },
+    chatRequestOptions?: ChatRequestOptions,
+  ) => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { width } = useWindowSize();
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, []);
+
+  const adjustHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 0}px`;
+    }
+  };
+
+  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(event.target.value);
+    adjustHeight();
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
+
+  const submitForm = useCallback(() => {
+    handleSubmit(undefined, {
+      experimental_attachments: attachments,
+    });
+
+    setAttachments([]);
+
+    if (width && width > 768) {
+      textareaRef.current?.focus();
+    }
+  }, [attachments, handleSubmit, setAttachments, width]);
+
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(`/api/files/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const { url, pathname, contentType } = data;
+
+        return {
+          url,
+          name: pathname,
+          contentType: contentType,
+        };
+      } else {
+        const { error } = await response.json();
+        toast.error(error);
+      }
+    } catch (error) {
+      toast.error("Failed to upload file, please try again!");
+    }
+  };
+
+  const handleFileChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+
+      setUploadQueue(files.map((file) => file.name));
+
+      try {
+        const uploadPromises = files.map((file) => uploadFile(file));
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        const successfullyUploadedAttachments = uploadedAttachments.filter(
+          (attachment) => attachment !== undefined,
+        );
+
+        setAttachments((currentAttachments) => [
+          ...currentAttachments,
+          ...successfullyUploadedAttachments,
+        ]);
+      } catch (error) {
+        console.error("Error uploading files!", error);
+      } finally {
+        setUploadQueue([]);
+      }
+    },
+    [setAttachments],
+  );
+
+  return (
+    <div className="relative w-full flex flex-col gap-4">
+      {messages.length === 0 &&
+        attachments.length === 0 &&
+        uploadQueue.length === 0 && (
+          <div className="grid sm:grid-cols-2 gap-4 w-full md:px-0 mx-auto md:max-w-[500px]">
+            {suggestedActions.map((suggestedAction, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ delay: 0.05 * index }}
+                key={index}
+                className={index > 1 ? "hidden sm:block" : "block"}
+              >
+                <button
+                  onClick={async () => {
+                    append({
+                      role: "user",
+                      content: suggestedAction.action,
+                    });
+                  }}
+                  className="border-none bg-muted/50 w-full text-left border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-300 rounded-lg p-3 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex flex-col"
+                >
+                  <span className="font-medium">{suggestedAction.title}</span>
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {suggestedAction.label}
+                  </span>
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+      <input
+        type="file"
+        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+        ref={fileInputRef}
+        multiple
+        onChange={handleFileChange}
+        tabIndex={-1}
+      />
+
+      {(attachments.length > 0 || uploadQueue.length > 0) && (
+        <div className="flex flex-row gap-2 overflow-x-scroll">
+          {attachments.map((attachment) => (
+            <PreviewAttachment key={attachment.url} attachment={attachment} />
+          ))}
+
+          {uploadQueue.map((filename) => (
+            <PreviewAttachment
+              key={filename}
+              attachment={{
+                url: "",
+                name: filename,
+                contentType: "",
+              }}
+              isUploading={true}
+            />
+          ))}
+        </div>
+      )}
+
+      <Textarea
+        ref={textareaRef}
+        placeholder="Send a message..."
+        value={input}
+        onChange={handleInput}
+        className="min-h-[24px] overflow-hidden resize-none rounded-lg text-base bg-muted border-none"
+        rows={3}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+
+            if (isLoading) {
+              toast.error("Please wait for the model to finish its response!");
+            } else {
+              submitForm();
+            }
+          }
+        }}
+      />
+
+      {isLoading ? (
+        <Button
+          className="rounded-full p-1.5 h-fit absolute bottom-2 right-2 m-0.5 text-white"
+          onClick={(event) => {
+            event.preventDefault();
+            stop();
+          }}
+        >
+          <StopIcon size={14} />
+        </Button>
+      ) : (
+        <Button
+          className="rounded-full p-1.5 h-fit absolute bottom-2 right-2 m-0.5 text-white"
+          onClick={(event) => {
+            event.preventDefault();
+            submitForm();
+          }}
+          disabled={input.length === 0 || uploadQueue.length > 0}
+        >
+          <ArrowUpIcon size={14} />
+        </Button>
+      )}
+
+      <Button
+        className="rounded-full p-1.5 h-fit absolute bottom-2 right-10 m-0.5 dark:border-zinc-700"
+        onClick={(event) => {
+          event.preventDefault();
+          fileInputRef.current?.click();
+        }}
+        variant="outline"
+        disabled={isLoading}
+      >
+        <PaperclipIcon size={14} />
+      </Button>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/custom/navbar.tsx
+================================================
+import Image from "next/image";
+import Link from "next/link";
+
+import { auth, signOut } from "@/app/(auth)/auth";
+
+import { History } from "./history";
+import { SlashIcon } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+
+export const Navbar = async () => {
+  let session = await auth();
+
+  return (
+    <>
+      <div className="bg-background absolute top-0 left-0 w-dvw py-2 px-3 justify-between flex flex-row items-center z-30">
+        <div className="flex flex-row gap-3 items-center">
+          <History user={session?.user} />
+          <div className="flex flex-row gap-2 items-center">
+            <Image
+              src="/images/gemini-logo.png"
+              height={20}
+              width={20}
+              alt="gemini logo"
+            />
+            <div className="text-zinc-500">
+              <SlashIcon size={16} />
+            </div>
+            <div className="text-sm dark:text-zinc-300 truncate w-28 md:w-fit">
+              Next.js Gemini Chatbot
+            </div>
+          </div>
+        </div>
+
+        {session ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="py-1.5 px-2 h-fit font-normal"
+                variant="secondary"
+              >
+                {session.user?.email}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <ThemeToggle />
+              </DropdownMenuItem>
+              <DropdownMenuItem className="p-1 z-50">
+                <form
+                  className="w-full"
+                  action={async () => {
+                    "use server";
+
+                    await signOut({
+                      redirectTo: "/",
+                    });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="w-full text-left px-1 py-0.5 text-red-500"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button className="py-1.5 px-2 h-fit font-normal text-white" asChild>
+            <Link href="/login">Login</Link>
+          </Button>
+        )}
+      </div>
+    </>
+  );
+};
+
+
+================================================
+File: /components/custom/overview.tsx
+================================================
+import { motion } from "framer-motion";
+import Link from "next/link";
+
+import { LogoGoogle, MessageIcon, VercelIcon } from "./icons";
+
+export const Overview = () => {
+  return (
+    <motion.div
+      key="overview"
+      className="max-w-[500px] mt-20 mx-4 md:mx-0"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ delay: 0.5 }}
+    >
+      <div className="border-none bg-muted/50 rounded-2xl p-6 flex flex-col gap-4 text-zinc-500 text-sm dark:text-zinc-400 dark:border-zinc-700">
+        <p className="flex flex-row justify-center gap-4 items-center text-zinc-900 dark:text-zinc-50">
+          <VercelIcon />
+          <span>+</span>
+          <MessageIcon />
+        </p>
+        <p>
+          This is an open source Chatbot template powered by the Google Gemini
+          model built with Next.js and the AI SDK by Vercel. It uses the{" "}
+          <code className="rounded-sm bg-muted-foreground/15 px-1.5 py-0.5">
+            streamText
+          </code>{" "}
+          function in the server and the{" "}
+          <code className="rounded-sm bg-muted-foreground/15 px-1.5 py-0.5">
+            useChat
+          </code>{" "}
+          hook on the client to create a seamless chat experience.
+        </p>
+        <p>
+          {" "}
+          You can learn more about the AI SDK by visiting the{" "}
+          <Link
+            className="text-blue-500 dark:text-blue-400"
+            href="https://sdk.vercel.ai/docs"
+            target="_blank"
+          >
+            Docs
+          </Link>
+          .
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+
+================================================
+File: /components/custom/preview-attachment.tsx
+================================================
+import { Attachment } from "ai";
+
+import { LoaderIcon } from "./icons";
+
+export const PreviewAttachment = ({
+  attachment,
+  isUploading = false,
+}: {
+  attachment: Attachment;
+  isUploading?: boolean;
+}) => {
+  const { name, url, contentType } = attachment;
+
+  return (
+    <div className="flex flex-col gap-2 max-w-16">
+      <div className="h-20 w-16 bg-muted rounded-md relative flex flex-col items-center justify-center">
+        {contentType ? (
+          contentType.startsWith("image") ? (
+            // NOTE: it is recommended to use next/image for images
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={url}
+              src={url}
+              alt={name ?? "An image attachment"}
+              className="rounded-md size-full object-cover"
+            />
+          ) : (
+            <div className=""></div>
+          )
+        ) : (
+          <div className=""></div>
+        )}
+
+        {isUploading && (
+          <div className="animate-spin absolute text-zinc-500">
+            <LoaderIcon />
+          </div>
+        )}
+      </div>
+
+      <div className="text-xs text-zinc-500 max-w-16 truncate">{name}</div>
+    </div>
+  );
+};
+
+
+================================================
+File: /components/custom/submit-button.tsx
+================================================
+"use client";
+
+import { useFormStatus } from "react-dom";
+
+import { LoaderIcon } from "@/components/custom/icons";
+
+import { Button } from "../ui/button";
+
+export function SubmitButton({ children }: { children: React.ReactNode }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type={pending ? "button" : "submit"}
+      aria-disabled={pending}
+      className="relative text-white"
+    >
+      {children}
+      {pending && (
+        <span className="animate-spin absolute right-4">
+          <LoaderIcon />
+        </span>
+      )}
+      <span aria-live="polite" className="sr-only" role="status">
+        {pending ? "Loading" : "Submit form"}
+      </span>
+    </Button>
+  );
+}
+
+
+================================================
+File: /components/custom/theme-provider.tsx
+================================================
+"use client";
+
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { type ThemeProviderProps } from "next-themes/dist/types";
+import * as React from "react";
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+
+
+================================================
+File: /components/custom/theme-toggle.tsx
+================================================
+"use client";
+
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+
+export function ThemeToggle() {
+  const { setTheme, theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <div
+      className="cursor-pointer"
+      onClick={() => {
+        setTheme(theme === "dark" ? "light" : "dark");
+      }}
+    >
+      {`Toggle ${theme === "light" ? "dark" : "light"} mode`}
+    </div>
+  );
+}
+
+
+================================================
+File: /components/custom/use-scroll-to-bottom.ts
+================================================
+import { useEffect, useRef, RefObject } from "react";
+
+export function useScrollToBottom<T extends HTMLElement>(): [
+  RefObject<T>,
+  RefObject<T>,
+] {
+  const containerRef = useRef<T>(null);
+  const endRef = useRef<T>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const end = endRef.current;
+
+    if (container && end) {
+      const observer = new MutationObserver(() => {
+        end.scrollIntoView({ behavior: "instant", block: "end" });
+      });
+
+      observer.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true,
+      });
+
+      return () => observer.disconnect();
+    }
+  }, []);
+
+  return [containerRef, endRef];
+}
+
+
+================================================
+File: /components/custom/use-window-size.tsx
+================================================
+"use client";
+
+import { useState, useEffect } from "react";
+
+interface WindowSize {
+  width: number | undefined;
+  height: number | undefined;
+}
+
+function useWindowSize(): WindowSize {
+  const [windowSize, setWindowSize] = useState<WindowSize>({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    // Handler to call on window resize
+    function handleResize() {
+      // Set window width/height to state
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+
+    // Call handler right away so state gets updated with initial window size
+    handleResize();
+
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // Empty array ensures that effect is only run on mount and unmount
+
+  return windowSize;
+}
+
+export default useWindowSize;
+
+
+================================================
+File: /components/custom/weather.tsx
+================================================
+"use client";
+
+import cx from "classnames";
+import { format, isWithinInterval } from "date-fns";
+import { useEffect, useState } from "react";
+
+interface WeatherAtLocation {
+  latitude: number;
+  longitude: number;
+  generationtime_ms: number;
+  utc_offset_seconds: number;
+  timezone: string;
+  timezone_abbreviation: string;
+  elevation: number;
+  current_units: {
+    time: string;
+    interval: string;
+    temperature_2m: string;
+  };
+  current: {
+    time: string;
+    interval: number;
+    temperature_2m: number;
+  };
+  hourly_units: {
+    time: string;
+    temperature_2m: string;
+  };
+  hourly: {
+    time: string[];
+    temperature_2m: number[];
+  };
+  daily_units: {
+    time: string;
+    sunrise: string;
+    sunset: string;
+  };
+  daily: {
+    time: string[];
+    sunrise: string[];
+    sunset: string[];
+  };
+}
+
+const SAMPLE = {
+  latitude: 37.763283,
+  longitude: -122.41286,
+  generationtime_ms: 0.027894973754882812,
+  utc_offset_seconds: 0,
+  timezone: "GMT",
+  timezone_abbreviation: "GMT",
+  elevation: 18,
+  current_units: { time: "iso8601", interval: "seconds", temperature_2m: "°C" },
+  current: { time: "2024-10-07T19:30", interval: 900, temperature_2m: 29.3 },
+  hourly_units: { time: "iso8601", temperature_2m: "°C" },
+  hourly: {
+    time: [
+      "2024-10-07T00:00",
+      "2024-10-07T01:00",
+      "2024-10-07T02:00",
+      "2024-10-07T03:00",
+      "2024-10-07T04:00",
+      "2024-10-07T05:00",
+      "2024-10-07T06:00",
+      "2024-10-07T07:00",
+      "2024-10-07T08:00",
+      "2024-10-07T09:00",
+      "2024-10-07T10:00",
+      "2024-10-07T11:00",
+      "2024-10-07T12:00",
+      "2024-10-07T13:00",
+      "2024-10-07T14:00",
+      "2024-10-07T15:00",
+      "2024-10-07T16:00",
+      "2024-10-07T17:00",
+      "2024-10-07T18:00",
+      "2024-10-07T19:00",
+      "2024-10-07T20:00",
+      "2024-10-07T21:00",
+      "2024-10-07T22:00",
+      "2024-10-07T23:00",
+      "2024-10-08T00:00",
+      "2024-10-08T01:00",
+      "2024-10-08T02:00",
+      "2024-10-08T03:00",
+      "2024-10-08T04:00",
+      "2024-10-08T05:00",
+      "2024-10-08T06:00",
+      "2024-10-08T07:00",
+      "2024-10-08T08:00",
+      "2024-10-08T09:00",
+      "2024-10-08T10:00",
+      "2024-10-08T11:00",
+      "2024-10-08T12:00",
+      "2024-10-08T13:00",
+      "2024-10-08T14:00",
+      "2024-10-08T15:00",
+      "2024-10-08T16:00",
+      "2024-10-08T17:00",
+      "2024-10-08T18:00",
+      "2024-10-08T19:00",
+      "2024-10-08T20:00",
+      "2024-10-08T21:00",
+      "2024-10-08T22:00",
+      "2024-10-08T23:00",
+      "2024-10-09T00:00",
+      "2024-10-09T01:00",
+      "2024-10-09T02:00",
+      "2024-10-09T03:00",
+      "2024-10-09T04:00",
+      "2024-10-09T05:00",
+      "2024-10-09T06:00",
+      "2024-10-09T07:00",
+      "2024-10-09T08:00",
+      "2024-10-09T09:00",
+      "2024-10-09T10:00",
+      "2024-10-09T11:00",
+      "2024-10-09T12:00",
+      "2024-10-09T13:00",
+      "2024-10-09T14:00",
+      "2024-10-09T15:00",
+      "2024-10-09T16:00",
+      "2024-10-09T17:00",
+      "2024-10-09T18:00",
+      "2024-10-09T19:00",
+      "2024-10-09T20:00",
+      "2024-10-09T21:00",
+      "2024-10-09T22:00",
+      "2024-10-09T23:00",
+      "2024-10-10T00:00",
+      "2024-10-10T01:00",
+      "2024-10-10T02:00",
+      "2024-10-10T03:00",
+      "2024-10-10T04:00",
+      "2024-10-10T05:00",
+      "2024-10-10T06:00",
+      "2024-10-10T07:00",
+      "2024-10-10T08:00",
+      "2024-10-10T09:00",
+      "2024-10-10T10:00",
+      "2024-10-10T11:00",
+      "2024-10-10T12:00",
+      "2024-10-10T13:00",
+      "2024-10-10T14:00",
+      "2024-10-10T15:00",
+      "2024-10-10T16:00",
+      "2024-10-10T17:00",
+      "2024-10-10T18:00",
+      "2024-10-10T19:00",
+      "2024-10-10T20:00",
+      "2024-10-10T21:00",
+      "2024-10-10T22:00",
+      "2024-10-10T23:00",
+      "2024-10-11T00:00",
+      "2024-10-11T01:00",
+      "2024-10-11T02:00",
+      "2024-10-11T03:00",
+    ],
+    temperature_2m: [
+      36.6, 32.8, 29.5, 28.6, 29.2, 28.2, 27.5, 26.6, 26.5, 26, 25, 23.5, 23.9,
+      24.2, 22.9, 21, 24, 28.1, 31.4, 33.9, 32.1, 28.9, 26.9, 25.2, 23, 21.1,
+      19.6, 18.6, 17.7, 16.8, 16.2, 15.5, 14.9, 14.4, 14.2, 13.7, 13.3, 12.9,
+      12.5, 13.5, 15.8, 17.7, 19.6, 21, 21.9, 22.3, 22, 20.7, 18.9, 17.9, 17.3,
+      17, 16.7, 16.2, 15.6, 15.2, 15, 15, 15.1, 14.8, 14.8, 14.9, 14.7, 14.8,
+      15.3, 16.2, 17.9, 19.6, 20.5, 21.6, 21, 20.7, 19.3, 18.7, 18.4, 17.9,
+      17.3, 17, 17, 16.8, 16.4, 16.2, 16, 15.8, 15.7, 15.4, 15.4, 16.1, 16.7,
+      17, 18.6, 19, 19.5, 19.4, 18.5, 17.9, 17.5, 16.7, 16.3, 16.1,
+    ],
+  },
+  daily_units: {
+    time: "iso8601",
+    sunrise: "iso8601",
+    sunset: "iso8601",
+  },
+  daily: {
+    time: [
+      "2024-10-07",
+      "2024-10-08",
+      "2024-10-09",
+      "2024-10-10",
+      "2024-10-11",
+    ],
+    sunrise: [
+      "2024-10-07T07:15",
+      "2024-10-08T07:16",
+      "2024-10-09T07:17",
+      "2024-10-10T07:18",
+      "2024-10-11T07:19",
+    ],
+    sunset: [
+      "2024-10-07T19:00",
+      "2024-10-08T18:58",
+      "2024-10-09T18:57",
+      "2024-10-10T18:55",
+      "2024-10-11T18:54",
+    ],
+  },
+};
+
+function n(num: number): number {
+  return Math.ceil(num);
+}
+
+export function Weather({
+  weatherAtLocation = SAMPLE,
+}: {
+  weatherAtLocation?: WeatherAtLocation;
+}) {
+  const currentHigh = Math.max(
+    ...weatherAtLocation.hourly.temperature_2m.slice(0, 24),
+  );
+  const currentLow = Math.min(
+    ...weatherAtLocation.hourly.temperature_2m.slice(0, 24),
+  );
+
+  const isDay = isWithinInterval(new Date(weatherAtLocation.current.time), {
+    start: new Date(weatherAtLocation.daily.sunrise[0]),
+    end: new Date(weatherAtLocation.daily.sunset[0]),
+  });
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const hoursToShow = isMobile ? 5 : 6;
+
+  // Find the index of the current time or the next closest time
+  const currentTimeIndex = weatherAtLocation.hourly.time.findIndex(
+    (time) => new Date(time) >= new Date(weatherAtLocation.current.time),
+  );
+
+  // Slice the arrays to get the desired number of items
+  const displayTimes = weatherAtLocation.hourly.time.slice(
+    currentTimeIndex,
+    currentTimeIndex + hoursToShow,
+  );
+  const displayTemperatures = weatherAtLocation.hourly.temperature_2m.slice(
+    currentTimeIndex,
+    currentTimeIndex + hoursToShow,
+  );
+
+  return (
+    <div
+      className={cx(
+        "flex flex-col gap-4 rounded-2xl p-4 skeleton-bg",
+        {
+          "bg-blue-400": isDay,
+        },
+        {
+          "bg-indigo-900": !isDay,
+        },
+      )}
+    >
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row gap-2 items-center">
+          <div
+            className={cx(
+              "size-10 rounded-full skeleton-div",
+              {
+                "bg-yellow-300": isDay,
+              },
+              {
+                "bg-indigo-100": !isDay,
+              },
+            )}
+          />
+          <div className="text-4xl font-medium text-blue-50">
+            {n(weatherAtLocation.current.temperature_2m)}
+            {weatherAtLocation.current_units.temperature_2m}
+          </div>
+        </div>
+
+        <div className="text-blue-50">{`H:${n(currentHigh)}° L:${n(currentLow)}°`}</div>
+      </div>
+
+      <div className="flex flex-row justify-between">
+        {displayTimes.map((time, index) => (
+          <div key={time} className="flex flex-col items-center gap-1">
+            <div className="text-blue-100 text-xs">
+              {format(new Date(time), "ha")}
+            </div>
+            <div
+              className={cx(
+                "size-6 rounded-full skeleton-div",
+                {
+                  "bg-yellow-300": isDay,
+                },
+                {
+                  "bg-indigo-200": !isDay,
+                },
+              )}
+            />
+            <div className="text-blue-50 text-sm">
+              {n(displayTemperatures[index])}
+              {weatherAtLocation.hourly_units.temperature_2m}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/authorize-payment.tsx
+================================================
+"use client";
+
+import { differenceInMinutes } from "date-fns";
+import { useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
+
+import { CheckCircle, InfoIcon } from "../custom/icons";
+import { Input } from "../ui/input";
+
+export function AuthorizePayment({
+  intent = { reservationId: "sample-uuid" },
+}: {
+  intent?: { reservationId: string };
+}) {
+  const { data: reservation, mutate } = useSWR(
+    `/api/reservation?id=${intent.reservationId}`,
+    fetcher,
+  );
+
+  const [input, setInput] = useState("");
+
+  const handleAuthorize = async (magicWord: string) => {
+    try {
+      const response = await fetch(
+        `/api/reservation?id=${intent.reservationId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ magicWord }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || response.statusText);
+      }
+
+      const updatedReservation = await response.json();
+      mutate(updatedReservation);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
+    }
+  };
+
+  return reservation?.hasCompletedPayment ? (
+    <div className="bg-emerald-500 p-4 rounded-lg gap-4 flex flex-row justify-between items-center">
+      <div className="dark:text-emerald-950 text-emerald-50 font-medium">
+        Payment Verified
+      </div>
+      <div className="dark:text-emerald-950 text-emerald-50">
+        <CheckCircle size={20} />
+      </div>
+    </div>
+  ) : differenceInMinutes(new Date(), new Date(reservation?.createdAt)) >
+    150 ? (
+    <div className="bg-red-500 p-4 rounded-lg gap-4 flex flex-row justify-between items-center">
+      <div className="text-background">Payment Gateway Timed Out</div>
+      <div className="text-background">
+        <InfoIcon size={20} />
+      </div>
+    </div>
+  ) : (
+    <div className="bg-muted p-4 rounded-lg flex flex-col gap-2">
+      <div className="text font-medium">
+        Use your saved information for this transaction
+      </div>
+      <div className="text-muted-foreground text-sm sm:text-base">
+        Enter the magic word to authorize payment. Hint: It rhymes with bercel.
+      </div>
+
+      <Input
+        type="text"
+        placeholder="Enter magic word..."
+        className="dark:bg-zinc-700 text-base border-none mt-2"
+        onChange={(event) => setInput(event.currentTarget.value)}
+        onKeyDown={async (event) => {
+          if (event.key === "Enter") {
+            await handleAuthorize(input);
+            setInput("");
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/boarding-pass.tsx
+================================================
+import { format } from "date-fns";
+import { FlashlightIcon, PlaneTakeoffIcon } from "lucide-react";
+
+const SAMPLE = {
+  reservationId: "RES123456",
+  flightNumber: "DL1",
+  seat: "1C",
+  departure: {
+    cityName: "London",
+    airportCode: "LHR",
+    airportName: "Heathrow Airport",
+    timestamp: "2023-11-01T09:00:00Z",
+    terminal: "5",
+    gate: "A10",
+  },
+  arrival: {
+    cityName: "New York City",
+    airportCode: "JFK",
+    airportName: "John F. Kennedy International Airport",
+    timestamp: "2023-11-01T12:00:00Z",
+    terminal: "4",
+    gate: "B22",
+  },
+  passengerName: "John Doe",
+};
+
+export function DisplayBoardingPass({ boardingPass = SAMPLE }) {
+  return (
+    <div className="bg-yellow-200 p-4 rounded-lg flex flex-col gap-2">
+      <div className="flex flex-row justify-between items-center relative">
+        <div className="flex flex-col gap-0.5">
+          <div className="text-yellow-800 text-sm sm:text-base">
+            {boardingPass.departure.cityName}
+          </div>
+          <div className="text-yellow-800 text-2xl sm:text-3xl font-semibold">
+            {boardingPass.departure.airportCode}
+          </div>
+        </div>
+
+        <div className="absolute w-full flex flex-row justify-center">
+          <div className="text-amber-800">
+            <PlaneTakeoffIcon />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-0.5">
+          <div className="text-yellow-800 text-sm sm:text-base">
+            {boardingPass.arrival.cityName}
+          </div>
+          <div className="text-yellow-800 text-2xl sm:text-3xl font-semibold text-right">
+            {boardingPass.arrival.airportCode}
+          </div>
+        </div>
+      </div>
+
+      <div className="h-px grow bg-yellow-600/20" />
+
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-col gap-0.5">
+          <div className="text-yellow-900 text-sm font-medium sm:text-base">
+            Passenger
+          </div>
+          <div className="text-lg text-yellow-700">
+            {boardingPass.passengerName}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-0.5">
+          <div className="text-yellow-900 text-sm font-medium sm:text-base">
+            Gate
+          </div>
+          <div className="text-lg text-yellow-700">
+            {boardingPass.departure.gate}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-0.5">
+          <div className="text-yellow-900 text-sm font-medium sm:text-base">
+            Boards
+          </div>
+          <div className="text-lg text-yellow-700">
+            {format(new Date(boardingPass.departure.timestamp), "h:mma")}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/create-reservation.tsx
+================================================
+import { format } from "date-fns";
+
+const SAMPLE = {
+  seats: ["4C"],
+  flightNumber: "EK413",
+  departure: {
+    cityName: "Sydney",
+    airportCode: "SYD",
+    timestamp: "2023-11-01T06:00:00",
+    gate: "A12",
+    terminal: "1",
+  },
+  arrival: {
+    cityName: "Chennai",
+    airportCode: "MAA",
+    timestamp: "2023-11-01T18:45:00",
+    gate: "B5",
+    terminal: "3",
+  },
+  passengerName: "John Doe",
+  totalPriceInUSD: 1200,
+};
+
+export function CreateReservation({ reservation = SAMPLE }) {
+  return (
+    <div className="rounded-lg bg-muted p-4">
+      <div>
+        <div className="flex flex-col justify-between gap-4">
+          <div className="text font-medium">
+            <span className="no-skeleton text-foreground/50">
+              Continue purchasing this reservation from{" "}
+            </span>
+            {reservation.departure.cityName} to {reservation.arrival.cityName}
+            <span className="no-skeleton text-foreground/50"> at </span>{" "}
+            <span className="no-skeleton text-emerald-600 font-medium">
+              ${reservation.totalPriceInUSD} USD
+              <span className="no-skeleton text-foreground/50 ">?</span>
+            </span>
+          </div>
+
+          <div className="flex flex-row gap-6">
+            <div className="flex flex-col gap-1">
+              <div className="text font-medium sm:text-base text-sm">Seats</div>
+              <div className="text-muted-foreground sm:text-base text-sm">
+                {reservation.seats.join(", ")}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="text sm:text-base text-sm font-medium">
+                Flight Number
+              </div>
+              <div className="text sm:text-base text-sm text-muted-foreground">
+                {reservation.flightNumber}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="text font-medium sm:text-base text-sm">Date</div>
+              <div className="text text-muted-foreground sm:text-base text-sm">
+                {format(new Date(reservation.arrival.timestamp), "dd LLL yyyy")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/flight-status.tsx
+================================================
+import { differenceInHours, format } from "date-fns";
+
+import { ArrowUpRightSmallIcon } from "../custom/icons";
+
+const SAMPLE = {
+  flightNumber: "BA142",
+  departure: {
+    cityName: "London",
+    airportCode: "LHR",
+    airportName: "London Heathrow Airport",
+    timestamp: "2024-10-08T18:30:00Z",
+    terminal: "5",
+    gate: "A10",
+  },
+  arrival: {
+    cityName: "New York",
+    airportCode: "JFK",
+    airportName: "John F. Kennedy International Airport",
+    timestamp: "2024-10-09T07:30:00Z",
+    terminal: "7",
+    gate: "B22",
+  },
+  totalDistanceInMiles: 3450,
+};
+
+export function Row({ row = SAMPLE.arrival, type = "arrival" }) {
+  return (
+    <div className="flex flex-row justify-between">
+      <div className="flex flex-row">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row gap-2 items-center">
+            <div className="bg-foreground text-background rounded-full size-fit">
+              {type === "arrival" ? (
+                <div className="rotate-90">
+                  <ArrowUpRightSmallIcon size={16} />
+                </div>
+              ) : (
+                <ArrowUpRightSmallIcon size={16} />
+              )}
+            </div>
+            <div className="text-sm sm:text-base text-muted-foreground">
+              {row.airportCode}
+            </div>
+            <div>·</div>
+            <div className="text-sm sm:text-base truncate max-w-32 sm:max-w-64 text-muted-foreground">
+              {row.airportName}
+            </div>
+          </div>
+
+          <div className="text-2xl sm:text-3xl font-medium">
+            {format(new Date(row.timestamp), "h:mm a")}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1 items-end justify-center mt-auto">
+        <div className="text-sm sm:text-sm bg-amber-400 rounded-md w-fit px-2 text-amber-900">
+          {row.gate}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Terminal {row.terminal}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function FlightStatus({ flightStatus = SAMPLE }) {
+  return (
+    <div className="flex flex-col gap-2 bg-muted rounded-lg p-4">
+      <div className="flex flex-col gap-1 text-sm">
+        <div className="text-muted-foreground">{flightStatus.flightNumber}</div>
+        <div className="text-lg font-medium">
+          {flightStatus.departure.cityName} to {flightStatus.arrival.cityName}
+        </div>
+      </div>
+
+      <div className="h-px grow bg-muted-foreground/20" />
+
+      <Row row={flightStatus.arrival} type="departure" />
+
+      <div className="flex flex-row gap-2 items-center">
+        <div className="text-xs text-muted-foreground ">
+          {differenceInHours(
+            new Date(flightStatus.arrival.timestamp),
+            new Date(flightStatus.departure.timestamp),
+          )}{" "}
+          hours
+        </div>
+        <div>·</div>
+        <div className="text-xs text-muted-foreground">
+          {flightStatus.totalDistanceInMiles} mi
+        </div>
+        <div className="h-px grow bg-muted-foreground/20 ml-2" />
+      </div>
+
+      <Row row={flightStatus.departure} type="arrival" />
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/list-flights.tsx
+================================================
+"use client";
+
+import { useChat } from "ai/react";
+import { differenceInHours, format } from "date-fns";
+
+const SAMPLE = {
+  flights: [
+    {
+      id: "result_1",
+      departure: {
+        cityName: "San Francisco",
+        airportCode: "SFO",
+        timestamp: "2024-05-19T18:00:00Z",
+      },
+      arrival: {
+        cityName: "Rome",
+        airportCode: "FCO",
+        timestamp: "2024-05-20T14:30:00Z",
+      },
+      airlines: ["United Airlines", "Lufthansa"],
+      priceInUSD: 1200.5,
+      numberOfStops: 1,
+    },
+    {
+      id: "result_2",
+      departure: {
+        cityName: "San Francisco",
+        airportCode: "SFO",
+        timestamp: "2024-05-19T17:30:00Z",
+      },
+      arrival: {
+        cityName: "Rome",
+        airportCode: "FCO",
+        timestamp: "2024-05-20T15:00:00Z",
+      },
+      airlines: ["British Airways"],
+      priceInUSD: 1350,
+      numberOfStops: 0,
+    },
+    {
+      id: "result_3",
+      departure: {
+        cityName: "San Francisco",
+        airportCode: "SFO",
+        timestamp: "2024-05-19T19:15:00Z",
+      },
+      arrival: {
+        cityName: "Rome",
+        airportCode: "FCO",
+        timestamp: "2024-05-20T16:45:00Z",
+      },
+      airlines: ["Delta Air Lines", "Air France"],
+      priceInUSD: 1150.75,
+      numberOfStops: 1,
+    },
+    {
+      id: "result_4",
+      departure: {
+        cityName: "San Francisco",
+        airportCode: "SFO",
+        timestamp: "2024-05-19T16:30:00Z",
+      },
+      arrival: {
+        cityName: "Rome",
+        airportCode: "FCO",
+        timestamp: "2024-05-20T13:50:00Z",
+      },
+      airlines: ["American Airlines", "Iberia"],
+      totalDurationInMinutes: 740,
+      priceInUSD: 1250.25,
+      numberOfStops: 1,
+    },
+  ],
+};
+
+export function ListFlights({
+  chatId,
+  results = SAMPLE,
+}: {
+  chatId: string;
+  results?: typeof SAMPLE;
+}) {
+  const { append } = useChat({
+    id: chatId,
+    body: { id: chatId },
+    maxSteps: 5,
+  });
+
+  return (
+    <div className="rounded-lg bg-muted px-4 py-1.5 flex flex-col">
+      {results.flights.map((flight) => (
+        <div
+          key={flight.id}
+          className="cursor-pointer flex flex-row border-b dark:border-zinc-700 py-2 last-of-type:border-none group"
+          onClick={() => {
+            append({
+              role: "user",
+              content: `I would like to book the ${flight.airlines} one!`,
+            });
+          }}
+        >
+          <div className="flex flex-col w-full gap-0.5 justify-between">
+            <div className="flex flex-row gap-0.5 text-base sm:text-base font-medium group-hover:underline">
+              <div className="text">
+                {format(new Date(flight.departure.timestamp), "h:mm a")}
+              </div>
+              <div className="no-skeleton">–</div>
+              <div className="text">
+                {format(new Date(flight.arrival.timestamp), "h:mm a")}
+              </div>
+            </div>
+            <div className="text w-fit hidden sm:flex text-sm text-muted-foreground flex-row gap-2">
+              <div>{flight.airlines.join(", ")}</div>
+            </div>
+            <div className="text sm:hidden text-xs sm:text-sm text-muted-foreground flex flex-row gap-2">
+              {flight.airlines.length} stops
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-0.5 justify-between">
+            <div className="flex flex-row gap-2">
+              <div className="text-base sm:text-base">
+                {differenceInHours(
+                  new Date(flight.arrival.timestamp),
+                  new Date(flight.departure.timestamp),
+                )}{" "}
+                hr
+              </div>
+            </div>
+            <div className="text-xs sm:text-sm text-muted-foreground flex flex-row">
+              <div>{flight.departure.airportCode}</div>
+              <div>–</div>
+              <div>{flight.arrival.airportCode}</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col w-32 items-end gap-0.5">
+            <div className="flex flex-row gap-2">
+              <div className="text-base sm:text-base text-emerald-600 dark:text-emerald-500">
+                ${flight.priceInUSD}
+              </div>
+            </div>
+            <div className="text-xs sm:text-sm text-muted-foreground flex flex-row">
+              Round Trip
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/select-seats.tsx
+================================================
+"use client";
+
+import { useChat } from "ai/react";
+import cx from "classnames";
+
+interface Seat {
+  seatNumber: string;
+  priceInUSD: number;
+  isAvailable: boolean;
+}
+
+const SAMPLE: { seats: Seat[][] } = {
+  seats: [
+    [
+      { seatNumber: "1A", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "1B", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "1C", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "1D", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "1E", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "1F", priceInUSD: 150, isAvailable: false },
+    ],
+    [
+      { seatNumber: "2A", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "2B", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "2C", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "2D", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "2E", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "2F", priceInUSD: 150, isAvailable: false },
+    ],
+    [
+      { seatNumber: "3A", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "3B", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "3C", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "3D", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "3E", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "3F", priceInUSD: 150, isAvailable: false },
+    ],
+    [
+      { seatNumber: "4A", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "4B", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "4C", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "4D", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "4E", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "4F", priceInUSD: 150, isAvailable: false },
+    ],
+    [
+      { seatNumber: "5A", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "5B", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "5C", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "5D", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "5E", priceInUSD: 150, isAvailable: false },
+      { seatNumber: "5F", priceInUSD: 150, isAvailable: false },
+    ],
+  ],
+};
+
+export function SelectSeats({
+  chatId,
+  availability = SAMPLE,
+}: {
+  chatId: string;
+  availability?: typeof SAMPLE;
+}) {
+  const { append } = useChat({
+    id: chatId,
+    body: { id: chatId },
+    maxSteps: 5,
+  });
+
+  return (
+    <div className="flex flex-col gap-2 bg-muted rounded-lg">
+      <div className="flex flex-col gap-4 scale-75">
+        <div className="flex flex-row w-full justify-between text-muted-foreground">
+          <div className="flex flex-row">
+            <div className="w-[45px] sm:w-[54px] text-center">A</div>
+            <div className="w-[45px] sm:w-[54px] text-center">B</div>
+            <div className="w-[45px] sm:w-[54px] text-center">C</div>
+          </div>
+          <div className="flex flex-row">
+            <div className="w-[45px] sm:w-[54px] text-center">D</div>
+            <div className="w-[45px] sm:w-[54px] text-center">E</div>
+            <div className="w-[45px] sm:w-[54px] text-center">F</div>
+          </div>
+        </div>
+
+        {availability.seats.map((row, index) => (
+          <div key={`row-${index}`} className="flex flex-row gap-4">
+            {row.map((seat, seatIndex) => (
+              <>
+                {seatIndex === 3 ? (
+                  <div className="flex flex-row items-center justify-center w-full text-muted-foreground">
+                    {index + 1}
+                  </div>
+                ) : null}
+                <div
+                  key={seat.seatNumber}
+                  onClick={() => {
+                    append({
+                      role: "user",
+                      content: `I'd like to go with seat ${seat.seatNumber}`,
+                    });
+                  }}
+                  className={cx(
+                    "cursor-pointer group relative size-8 sm:size-10 flex-shrink-0 flex rounded-sm flex-row items-center justify-center",
+                    {
+                      "bg-blue-500 hover:bg-pink-500": seat.isAvailable,
+                      "bg-gray-500 cursor-not-allowed": !seat.isAvailable,
+                    },
+                  )}
+                >
+                  <div className="text-xs text-white">${seat.priceInUSD}</div>
+                  <div
+                    className={cx(
+                      "absolute -top-1 h-2 w-full scale-125 rounded-sm",
+                      {
+                        "bg-blue-600 group-hover:bg-pink-600": seat.isAvailable,
+                        "bg-zinc-600 cursor-not-allowed": !seat.isAvailable,
+                      },
+                    )}
+                  />
+                </div>
+              </>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-row gap-4 justify-center pb-6">
+        <div className="flex flex-row items-center gap-2">
+          <div className="size-4 bg-blue-500 rounded-sm" />
+          <div className="text text-muted-foreground font-medium text-sm">
+            Available
+          </div>
+        </div>
+        <div className="flex flex-row items-center gap-2">
+          <div className="size-4 bg-gray-500 rounded-sm" />
+          <div className="text text-muted-foreground font-medium text-sm">
+            Unavailable
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================
+File: /components/flights/verify-payment.tsx
+================================================
+export function VerifyPayment({
+  result: { hasCompletedPayment },
+}: {
+  result: {
+    hasCompletedPayment: boolean;
+  };
+}) {
+  return (
+    <div>
+      {hasCompletedPayment
+        ? "Your payment transaction has been verified!"
+        : "Unable to verify your payment, please try again!"}
+    </div>
+  );
+}
+
+
+================================================
+File: /components/ui/alert-dialog.tsx
+================================================
+"use client"
+
+import * as React from "react"
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+
+const AlertDialog = AlertDialogPrimitive.Root
+
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger
+
+const AlertDialogPortal = AlertDialogPrimitive.Portal
+
+const AlertDialogOverlay = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Overlay
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+    ref={ref}
+  />
+))
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
+
+const AlertDialogContent = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPortal>
+    <AlertDialogOverlay />
+    <AlertDialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}
+    />
+  </AlertDialogPortal>
+))
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
+
+const AlertDialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-2 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
+)
+AlertDialogHeader.displayName = "AlertDialogHeader"
+
+const AlertDialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+AlertDialogFooter.displayName = "AlertDialogFooter"
+
+const AlertDialogTitle = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold", className)}
+    {...props}
+  />
+))
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
+
+const AlertDialogDescription = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName
+
+const AlertDialogAction = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Action>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Action
+    ref={ref}
+    className={cn(buttonVariants(), className)}
+    {...props}
+  />
+))
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
+
+const AlertDialogCancel = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
+>(({ className, ...props }, ref) => (
+  <AlertDialogPrimitive.Cancel
+    ref={ref}
+    className={cn(
+      buttonVariants({ variant: "outline" }),
+      "mt-2 sm:mt-0",
+      className
+    )}
+    {...props}
+  />
+))
+AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName
+
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+}
+
+
+================================================
+File: /components/ui/button.tsx
+================================================
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+
+================================================
+File: /components/ui/dropdown-menu.tsx
+================================================
+"use client"
+
+import * as React from "react"
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
+import { Check, ChevronRight, Circle } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const DropdownMenu = DropdownMenuPrimitive.Root
+
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+
+const DropdownMenuGroup = DropdownMenuPrimitive.Group
+
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal
+
+const DropdownMenuSub = DropdownMenuPrimitive.Sub
+
+const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+
+const DropdownMenuSubTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
+    inset?: boolean
+  }
+>(({ className, inset, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubTrigger
+    ref={ref}
+    className={cn(
+      "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent data-[state=open]:bg-accent",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  >
+    {children}
+    <ChevronRight className="ml-auto h-4 w-4" />
+  </DropdownMenuPrimitive.SubTrigger>
+))
+DropdownMenuSubTrigger.displayName =
+  DropdownMenuPrimitive.SubTrigger.displayName
+
+const DropdownMenuSubContent = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubContent
+    ref={ref}
+    className={cn(
+      "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuSubContent.displayName =
+  DropdownMenuPrimitive.SubContent.displayName
+
+const DropdownMenuContent = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Content
+      ref={ref}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        className
+      )}
+      {...props}
+    />
+  </DropdownMenuPrimitive.Portal>
+))
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+
+const DropdownMenuItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
+    inset?: boolean
+  }
+>(({ className, inset, ...props }, ref) => (
+  <DropdownMenuPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+
+const DropdownMenuCheckboxItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
+>(({ className, children, checked, ...props }, ref) => (
+  <DropdownMenuPrimitive.CheckboxItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    checked={checked}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Check className="h-4 w-4" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.CheckboxItem>
+))
+DropdownMenuCheckboxItem.displayName =
+  DropdownMenuPrimitive.CheckboxItem.displayName
+
+const DropdownMenuRadioItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
+>(({ className, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.RadioItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Circle className="h-2 w-2 fill-current" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.RadioItem>
+))
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
+
+const DropdownMenuLabel = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
+    inset?: boolean
+  }
+>(({ className, inset, ...props }, ref) => (
+  <DropdownMenuPrimitive.Label
+    ref={ref}
+    className={cn(
+      "px-2 py-1.5 text-sm font-semibold",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
+
+const DropdownMenuSeparator = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
+
+const DropdownMenuShortcut = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) => {
+  return (
+    <span
+      className={cn("ml-auto text-xs tracking-widest opacity-60", className)}
+      {...props}
+    />
+  )
+}
+DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+}
+
+
+================================================
+File: /components/ui/input.tsx
+================================================
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+
+
+================================================
+File: /components/ui/label.tsx
+================================================
+"use client"
+
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const labelVariants = cva(
+  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+)
+
+const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+    VariantProps<typeof labelVariants>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants(), className)}
+    {...props}
+  />
+))
+Label.displayName = LabelPrimitive.Root.displayName
+
+export { Label }
+
+
+================================================
+File: /components/ui/sheet.tsx
+================================================
+"use client"
+
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Sheet = SheetPrimitive.Root
+
+const SheetTrigger = SheetPrimitive.Trigger
+
+const SheetClose = SheetPrimitive.Close
+
+const SheetPortal = SheetPrimitive.Portal
+
+const SheetOverlay = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Overlay
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+    ref={ref}
+  />
+))
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
+
+const sheetVariants = cva(
+  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  {
+    variants: {
+      side: {
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        bottom:
+          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+        right:
+          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+      },
+    },
+    defaultVariants: {
+      side: "right",
+    },
+  }
+)
+
+interface SheetContentProps
+  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
+    VariantProps<typeof sheetVariants> {}
+
+const SheetContent = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Content>,
+  SheetContentProps
+>(({ side = "right", className, children, ...props }, ref) => (
+  <SheetPortal>
+    <SheetOverlay />
+    <SheetPrimitive.Content
+      ref={ref}
+      className={cn(sheetVariants({ side }), className)}
+      {...props}
+    >
+      {children}
+      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </SheetPrimitive.Close>
+    </SheetPrimitive.Content>
+  </SheetPortal>
+))
+SheetContent.displayName = SheetPrimitive.Content.displayName
+
+const SheetHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-2 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
+)
+SheetHeader.displayName = "SheetHeader"
+
+const SheetFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+SheetFooter.displayName = "SheetFooter"
+
+const SheetTitle = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold text-foreground", className)}
+    {...props}
+  />
+))
+SheetTitle.displayName = SheetPrimitive.Title.displayName
+
+const SheetDescription = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+SheetDescription.displayName = SheetPrimitive.Description.displayName
+
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+
+
+================================================
+File: /components/ui/textarea.tsx
+================================================
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+export interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <textarea
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Textarea.displayName = "Textarea"
+
+export { Textarea }
+
+
+================================================
+File: /db/migrate.ts
+================================================
+import { config } from "dotenv";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+
+config({
+  path: ".env.local",
+});
+
+const runMigrate = async () => {
+  if (!process.env.POSTGRES_URL) {
+    throw new Error("POSTGRES_URL is not defined");
+  }
+
+  const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
+  const db = drizzle(connection);
+
+  console.log("⏳ Running migrations...");
+
+  const start = Date.now();
+  await migrate(db, { migrationsFolder: "./lib/drizzle" });
+  const end = Date.now();
+
+  console.log("✅ Migrations completed in", end - start, "ms");
+  process.exit(0);
+};
+
+runMigrate().catch((err) => {
+  console.error("❌ Migration failed");
+  console.error(err);
+  process.exit(1);
+});
+
+
+================================================
+File: /db/queries.ts
+================================================
+import "server-only";
+
+import { genSaltSync, hashSync } from "bcrypt-ts";
+import { desc, eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
+import { user, chat, User, reservation } from "./schema";
+
+// Optionally, if not using email/pass login, you can
+// use the Drizzle adapter for Auth.js / NextAuth
+// https://authjs.dev/reference/adapter/drizzle
+let client = postgres(`${process.env.POSTGRES_URL!}?sslmode=require`);
+let db = drizzle(client);
+
+export async function getUser(email: string): Promise<Array<User>> {
+  try {
+    return await db.select().from(user).where(eq(user.email, email));
+  } catch (error) {
+    console.error("Failed to get user from database");
+    throw error;
+  }
+}
+
+export async function createUser(email: string, password: string) {
+  let salt = genSaltSync(10);
+  let hash = hashSync(password, salt);
+
+  try {
+    return await db.insert(user).values({ email, password: hash });
+  } catch (error) {
+    console.error("Failed to create user in database");
+    throw error;
+  }
+}
+
+export async function saveChat({
+  id,
+  messages,
+  userId,
+}: {
+  id: string;
+  messages: any;
+  userId: string;
+}) {
+  try {
+    const selectedChats = await db.select().from(chat).where(eq(chat.id, id));
+
+    if (selectedChats.length > 0) {
+      return await db
+        .update(chat)
+        .set({
+          messages: JSON.stringify(messages),
+        })
+        .where(eq(chat.id, id));
+    }
+
+    return await db.insert(chat).values({
+      id,
+      createdAt: new Date(),
+      messages: JSON.stringify(messages),
+      userId,
+    });
+  } catch (error) {
+    console.error("Failed to save chat in database");
+    throw error;
+  }
+}
+
+export async function deleteChatById({ id }: { id: string }) {
+  try {
+    return await db.delete(chat).where(eq(chat.id, id));
+  } catch (error) {
+    console.error("Failed to delete chat by id from database");
+    throw error;
+  }
+}
+
+export async function getChatsByUserId({ id }: { id: string }) {
+  try {
+    return await db
+      .select()
+      .from(chat)
+      .where(eq(chat.userId, id))
+      .orderBy(desc(chat.createdAt));
+  } catch (error) {
+    console.error("Failed to get chats by user from database");
+    throw error;
+  }
+}
+
+export async function getChatById({ id }: { id: string }) {
+  try {
+    const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
+    return selectedChat;
+  } catch (error) {
+    console.error("Failed to get chat by id from database");
+    throw error;
+  }
+}
+
+export async function createReservation({
+  id,
+  userId,
+  details,
+}: {
+  id: string;
+  userId: string;
+  details: any;
+}) {
+  return await db.insert(reservation).values({
+    id,
+    createdAt: new Date(),
+    userId,
+    hasCompletedPayment: false,
+    details: JSON.stringify(details),
+  });
+}
+
+export async function getReservationById({ id }: { id: string }) {
+  const [selectedReservation] = await db
+    .select()
+    .from(reservation)
+    .where(eq(reservation.id, id));
+
+  return selectedReservation;
+}
+
+export async function updateReservation({
+  id,
+  hasCompletedPayment,
+}: {
+  id: string;
+  hasCompletedPayment: boolean;
+}) {
+  return await db
+    .update(reservation)
+    .set({
+      hasCompletedPayment,
+    })
+    .where(eq(reservation.id, id));
+}
+
+
+================================================
+File: /db/schema.ts
+================================================
+import { Message } from "ai";
+import { InferSelectModel } from "drizzle-orm";
+import {
+  pgTable,
+  varchar,
+  timestamp,
+  json,
+  uuid,
+  boolean,
+} from "drizzle-orm/pg-core";
+
+export const user = pgTable("User", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  email: varchar("email", { length: 64 }).notNull(),
+  password: varchar("password", { length: 64 }),
+});
+
+export type User = InferSelectModel<typeof user>;
+
+export const chat = pgTable("Chat", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp("createdAt").notNull(),
+  messages: json("messages").notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+});
+
+export type Chat = Omit<InferSelectModel<typeof chat>, "messages"> & {
+  messages: Array<Message>;
+};
+
+export const reservation = pgTable("Reservation", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp("createdAt").notNull(),
+  details: json("details").notNull(),
+  hasCompletedPayment: boolean("hasCompletedPayment").notNull().default(false),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+});
+
+export type Reservation = InferSelectModel<typeof reservation>;
+
+
+================================================
+File: /lib/utils.ts
+================================================
+import {
+  CoreMessage,
+  CoreToolMessage,
+  generateId,
+  Message,
+  ToolInvocation,
+} from "ai";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+import { Chat } from "@/db/schema";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+interface ApplicationError extends Error {
+  info: string;
+  status: number;
+}
+
+export const fetcher = async (url: string) => {
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    const error = new Error(
+      "An error occurred while fetching the data.",
+    ) as ApplicationError;
+
+    error.info = await res.json();
+    error.status = res.status;
+
+    throw error;
+  }
+
+  return res.json();
+};
+
+export function getLocalStorage(key: string) {
+  if (typeof window !== "undefined") {
+    return JSON.parse(localStorage.getItem(key) || "[]");
+  }
+  return [];
+}
+
+export function generateUUID(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function addToolMessageToChat({
+  toolMessage,
+  messages,
+}: {
+  toolMessage: CoreToolMessage;
+  messages: Array<Message>;
+}): Array<Message> {
+  return messages.map((message) => {
+    if (message.toolInvocations) {
+      return {
+        ...message,
+        toolInvocations: message.toolInvocations.map((toolInvocation) => {
+          const toolResult = toolMessage.content.find(
+            (tool) => tool.toolCallId === toolInvocation.toolCallId,
+          );
+
+          if (toolResult) {
+            return {
+              ...toolInvocation,
+              state: "result",
+              result: toolResult.result,
+            };
+          }
+
+          return toolInvocation;
+        }),
+      };
+    }
+
+    return message;
+  });
+}
+
+export function convertToUIMessages(
+  messages: Array<CoreMessage>,
+): Array<Message> {
+  return messages.reduce((chatMessages: Array<Message>, message) => {
+    if (message.role === "tool") {
+      return addToolMessageToChat({
+        toolMessage: message as CoreToolMessage,
+        messages: chatMessages,
+      });
+    }
+
+    let textContent = "";
+    let toolInvocations: Array<ToolInvocation> = [];
+
+    if (typeof message.content === "string") {
+      textContent = message.content;
+    } else if (Array.isArray(message.content)) {
+      for (const content of message.content) {
+        if (content.type === "text") {
+          textContent += content.text;
+        } else if (content.type === "tool-call") {
+          toolInvocations.push({
+            state: "call",
+            toolCallId: content.toolCallId,
+            toolName: content.toolName,
+            args: content.args,
+          });
+        }
+      }
+    }
+
+    chatMessages.push({
+      id: generateId(),
+      role: message.role,
+      content: textContent,
+      toolInvocations,
+    });
+
+    return chatMessages;
+  }, []);
+}
+
+export function getTitleFromChat(chat: Chat) {
+  const messages = convertToUIMessages(chat.messages as Array<CoreMessage>);
+  const firstMessage = messages[0];
+
+  if (!firstMessage) {
+    return "Untitled";
+  }
+
+  return firstMessage.content;
+}
+
+
+================================================
+File: /lib/drizzle/0000_absurd_joshua_kane.sql
+================================================
+CREATE TABLE IF NOT EXISTS "Chat" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"createdAt" timestamp NOT NULL,
+	"messages" json NOT NULL,
+	"userId" uuid NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "Reservation" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"createdAt" timestamp NOT NULL,
+	"details" json NOT NULL,
+	"hasCompletedPayment" boolean DEFAULT false NOT NULL,
+	"userId" uuid NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "User" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"email" varchar(64) NOT NULL,
+	"password" varchar(64)
+);
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Chat" ADD CONSTRAINT "Chat_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+
+================================================
+File: /lib/drizzle/meta/0000_snapshot.json
+================================================
+{
+  "id": "58eec28f-3819-47cc-9b8d-26bc712b203c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Chat": {
+      "name": "Chat",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "messages": {
+          "name": "messages",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Chat_userId_User_id_fk": {
+          "name": "Chat_userId_User_id_fk",
+          "tableFrom": "Chat",
+          "tableTo": "User",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.Reservation": {
+      "name": "Reservation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "details": {
+          "name": "details",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hasCompletedPayment": {
+          "name": "hasCompletedPayment",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Reservation_userId_User_id_fk": {
+          "name": "Reservation_userId_User_id_fk",
+          "tableFrom": "Reservation",
+          "tableTo": "User",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.User": {
+      "name": "User",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
+
+================================================
+File: /lib/drizzle/meta/_journal.json
+================================================
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1728635586378,
+      "tag": "0000_absurd_joshua_kane",
+      "breakpoints": true
+    }
+  ]
+}
+
