@@ -279,31 +279,34 @@ export async function POST(req: Request) {
     if (userMessage.includes('color') || userMessage.includes('design system')) {
       const toolResult = await tools.getColorInfo.function({}, { selection, designSystem });
       
+      // Parse once and keep as object
       const colorData = JSON.parse(toolResult);
+
       return new StreamingTextResponse(
         new ReadableStream({
           async start(controller) {
-            // Send initial message
-            controller.enqueue(
-              new TextEncoder().encode(
-                `{"type":"text","content":"I'll show you the colors in our design system. Here's what I found:\\n\\n"}\\n`
-              )
-            );
+            const encoder = new TextEncoder();
+            
+            // Send a single JSON response
+            const response = {
+              messages: [
+                {
+                  type: 'text',
+                  content: "I'll show you the colors in our design system. Here's what I found:\n\n"
+                },
+                {
+                  type: 'tool-call',
+                  name: 'getColorInfo',
+                  data: colorData
+                },
+                {
+                  type: 'text',
+                  content: "\nEach color is displayed with its name, hex value, and a visual preview for easy reference."
+                }
+              ]
+            };
 
-            // Send color table component
-            controller.enqueue(
-              new TextEncoder().encode(
-                `{"type":"tool-call","name":"getColorInfo","data":${toolResult}}\\n`
-              )
-            );
-
-            // Send closing message
-            controller.enqueue(
-              new TextEncoder().encode(
-                `{"type":"text","content":"\\nEach color is displayed with its name, hex value, and a visual preview for easy reference."}\\n`
-              )
-            );
-
+            controller.enqueue(encoder.encode(JSON.stringify(response)));
             controller.close();
           }
         })
@@ -314,11 +317,16 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(
       new ReadableStream({
         async start(controller) {
-          controller.enqueue(
-            new TextEncoder().encode(
-              `{"type":"text","content":${JSON.stringify(responseText)}}\\n`
-            )
-          );
+          const encoder = new TextEncoder();
+          const response = {
+            messages: [
+              {
+                type: 'text',
+                content: responseText
+              }
+            ]
+          };
+          controller.enqueue(encoder.encode(JSON.stringify(response)));
           controller.close();
         }
       })

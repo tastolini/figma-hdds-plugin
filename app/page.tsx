@@ -3,6 +3,8 @@
 import { useChat } from 'ai/react'
 import { useEffect, useRef, useState } from 'react'
 import styles from './page.module.css'
+import { ColorTable } from '@/components/color-table'
+import { SelectionInfo } from '@/components/selection-info'
 
 interface Message {
   id: string
@@ -42,8 +44,30 @@ interface AutomatorScript {
   name: string
   description: string
   color: string
-  actions: any[]
-  createdAt: number
+  actions: Array<{
+    command: {
+      name: string;
+      [key: string]: any;
+    };
+  }>;
+}
+
+interface ChatMessage {
+  type: 'text' | 'tool-call';
+  content?: string;
+  name?: string;
+  data?: any;
+}
+
+interface ChatResponse {
+  messages: ChatMessage[];
+}
+
+type ResponseContent = ChatResponse | AutomatorScript;
+
+interface ContentObj {
+  type: 'color' | 'selection';
+  data: any;
 }
 
 export default function Home() {
@@ -51,6 +75,7 @@ export default function Home() {
   const [lastExecutedId, setLastExecutedId] = useState<string | null>(null)
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
   const [designSystem, setDesignSystem] = useState<DesignSystem>({});
+  const [contentObj, setContentObj] = useState<ContentObj | null>(null)
   const { messages, input, setInput, isLoading, handleSubmit } = useChat({
     api: '/api/chat',
     body: {
@@ -135,52 +160,44 @@ export default function Home() {
   // Watch for new messages and execute scripts
   useEffect(() => {
     if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
+      const lastMessage = messages[messages.length - 1];
       if (lastMessage?.role === 'assistant' && lastMessage.content) {
         console.log('Raw message content:', lastMessage.content);
         
         try {
-          // First try direct JSON parse
-          const contentObj = JSON.parse(lastMessage.content.trim());
+          // Parse the message content
+          const contentObj = JSON.parse(lastMessage.content.trim()) as ResponseContent;
           console.log('Successfully parsed JSON:', contentObj);
           
-          if (contentObj.actions?.[0]?.command?.name) {
+          // Type guard for ChatResponse
+          const isChatResponse = (obj: ResponseContent): obj is ChatResponse => {
+            return 'messages' in obj;
+          };
+          
+          // Type guard for AutomatorScript
+          const isAutomatorScript = (obj: ResponseContent): obj is AutomatorScript => {
+            return 'actions' in obj && Array.isArray(obj.actions);
+          };
+          
+          if (isChatResponse(contentObj)) {
+            // Handle messages array
+            contentObj.messages.forEach((msg: ChatMessage) => {
+              if (msg.type === 'tool-call') {
+                if (msg.name === 'getColorInfo' && msg.data) {
+                  console.log('Rendering color table with data:', msg.data);
+                  setContentObj({ type: 'color', data: msg.data });
+                } else if (msg.name === 'getSelectionInfo' && msg.data) {
+                  console.log('Rendering selection info with data:', msg.data);
+                  setContentObj({ type: 'selection', data: msg.data });
+                }
+              }
+            });
+          } else if (isAutomatorScript(contentObj)) {
             console.log('Executing Automator script...');
             executeAutomatorScript(contentObj);
-            return;
           }
         } catch (e) {
-          console.log('Direct JSON parse failed, trying to extract JSON...');
-          
-          // Try to extract JSON from the message
-          const jsonMatch = lastMessage.content.match(/```json\n?(.*?)\n?```/s) || 
-                           lastMessage.content.match(/\{[\s\S]*\}/);
-          
-          if (jsonMatch) {
-            let extractedJson = jsonMatch[1] || jsonMatch[0];
-            extractedJson = extractedJson.trim();
-            
-            try {
-              // Try to parse as a regular JSON first
-              const parsedJson = JSON.parse(extractedJson);
-              
-              // Check if this is color data by looking for collection and modes
-              if (parsedJson.collection && parsedJson.modes) {
-                console.log('Found color data:', parsedJson);
-                // setContentObj({ type: 'color', data: parsedJson });
-              } else if (parsedJson.actions?.[0]?.command?.name) {
-                console.log('Executing extracted Automator script...');
-                executeAutomatorScript(parsedJson);
-              } else {
-                console.log('Extracted JSON is not a valid Automator script:', parsedJson);
-              }
-            } catch (error) {
-              console.error('Failed to parse extracted JSON:', error);
-              // setContentObj(null);
-            }
-          } else {
-            console.log('No JSON found in message');
-          }
+          console.error('Failed to parse message content:', e);
         }
       }
     }
@@ -212,10 +229,29 @@ export default function Home() {
                 message.role === 'assistant' ? 'mr-auto' : 'ml-auto'
               }`}
             >
-              <div 
-                className="prose prose-invert"
-                dangerouslySetInnerHTML={{ __html: message.content }}
-              />
+              {message.role === 'user' ? (
+                <div className="text-gray-800">{message.content}</div>
+              ) : (
+                <>
+                  {contentObj && message === messages[messages.length - 1] && (
+                    <div className="mb-4">
+                      {contentObj.type === 'color' && (
+                        <ColorTable data={contentObj.data} />
+                      )}
+                      {contentObj.type === 'selection' && (
+                        <SelectionInfo data={{
+                          selection: contentObj.data.selection,
+                          designSystem: contentObj.data.designSystem
+                        }} />
+                      )}
+                    </div>
+                  )}
+                  {/* Only show text content for non-tool-call messages */}
+                  {(!contentObj || message !== messages[messages.length - 1]) && (
+                    <div className="text-gray-800">{message.content}</div>
+                  )}
+                </>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />

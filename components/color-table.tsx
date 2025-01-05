@@ -27,7 +27,12 @@ interface ColorCollection {
 }
 
 interface ColorTableProps {
-  data: any; // The data is already parsed JSON
+  data: any;
+}
+
+function cleanColorValue(value: string): string {
+  // Remove arrow and whitespace, then the brand/ prefix if it exists
+  return value.replace('→', '').trim().replace('brand/', '');
 }
 
 function PureColorTable({ data }: ColorTableProps) {
@@ -42,6 +47,20 @@ function PureColorTable({ data }: ColorTableProps) {
   if (!parsedData.length) {
     return <div className="text-muted-foreground">No color information available</div>;
   }
+
+  // Collect all brand colors for reference
+  const brandColors = new Map<string, string>(
+    parsedData
+      .find(c => c.collection === 'Brand Colors')
+      ?.modes.flatMap(mode => 
+        mode.colors.flatMap(color => [
+          [cleanColorValue(color.name), color.value],
+          [color.name, color.value]
+        ] as [string, string][])
+      ) || []
+  );
+
+  console.log('Brand Colors Map:', Object.fromEntries(brandColors));
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,21 +81,37 @@ function PureColorTable({ data }: ColorTableProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mode.colors.map((color) => (
-                      <TableRow key={color.name}>
-                        <TableCell className="font-medium">{color.name}</TableCell>
-                        <TableCell className="font-mono">{color.value}</TableCell>
-                        <TableCell>
-                          <div
-                            className="h-8 w-8 rounded-md border"
-                            style={{ backgroundColor: color.value }}
-                          />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {color.description || '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {mode.colors.map((color) => {
+                      const lookupKey = cleanColorValue(color.value);
+                      const previewColor = collection.collection === 'Brand Colors'
+                        ? color.value
+                        : brandColors.get(lookupKey);
+                      
+                      console.log(
+                        `Color ${color.name}:`,
+                        `\n  Value: ${color.value}`,
+                        `\n  Lookup Key: ${lookupKey}`,
+                        `\n  Preview Color: ${previewColor}`
+                      );
+                      
+                      return (
+                        <TableRow key={color.name}>
+                          <TableCell className="font-medium">{color.name}</TableCell>
+                          <TableCell className="font-mono">{color.value}</TableCell>
+                          <TableCell>
+                            <div
+                              className="h-8 w-8 rounded-md border"
+                              style={{
+                                backgroundColor: previewColor || 'transparent'
+                              } as React.CSSProperties}
+                            />
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {color.description || '-'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
