@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Overview
 
 This is an Figma AI plugin template that demonstrates streaming LLM responses inside of a Figma plugin. This template shows:
@@ -105,3 +106,6 @@ A few things to note about this helper:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Figma Plugin API](https://www.figma.com/plugin-docs/) - learn about the Figma plugin API.
 - [OpenAI API](https://platform.openai.com/docs/guides/gpt) - learn about GPT APIs.
+=======
+# figma-hdds-plugin
+>>>>>>> aaaaa4f07f9acbbd5cde65404ce25d46039329a8
