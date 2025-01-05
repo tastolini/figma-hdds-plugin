@@ -22,13 +22,85 @@ interface AutomatorScript {
   createdAt: number;
 }
 
+// Function to get detailed information about a node
+function getNodeInfo(node: SceneNode): any {
+  const baseInfo: Record<string, any> = {
+    id: node.id,
+    name: node.name,
+    type: node.type,
+    visible: node.visible,
+  };
+
+  // Add size information if available
+  if ('width' in node && 'height' in node) {
+    baseInfo.width = node.width;
+    baseInfo.height = node.height;
+  }
+
+  // Add position information if available
+  if ('x' in node && 'y' in node) {
+    baseInfo.x = node.x;
+    baseInfo.y = node.y;
+  }
+
+  // Add component specific information
+  if (node.type === 'COMPONENT' || node.type === 'INSTANCE') {
+    if ('componentProperties' in node) {
+      baseInfo.componentProperties = node.componentProperties;
+    }
+  }
+
+  // Add text content if it's a text node
+  if (node.type === 'TEXT') {
+    baseInfo.characters = (node as TextNode).characters;
+    baseInfo.fontSize = (node as TextNode).fontSize;
+    baseInfo.fontName = (node as TextNode).fontName;
+  }
+
+  // Add children count if it's a container
+  if ('children' in node) {
+    baseInfo.childCount = (node as FrameNode | GroupNode | ComponentNode | InstanceNode).children.length;
+  }
+
+  return baseInfo;
+}
+
+// Function to get selection information
+function getSelectionInfo() {
+  const selection = figma.currentPage.selection;
+  const pageInfo = {
+    id: figma.currentPage.id,
+    name: figma.currentPage.name,
+    type: figma.currentPage.type,
+    childCount: figma.currentPage.children.length,
+  };
+
+  console.log('Current selection:', selection);
+  console.log('Current page:', pageInfo);
+
+  const selectionDetails = selection.map(node => {
+    const info = getNodeInfo(node);
+    console.log(`Node info for ${node.name}:`, info);
+    return info;
+  });
+
+  return {
+    count: selection.length,
+    items: selectionDetails,
+    page: pageInfo
+  };
+}
+
 async function executeAutomatorAction(action: AutomatorAction, selection: readonly SceneNode[]) {
+  console.log('Executing action:', action);
   const { command, actions } = action;
 
   switch (command.name) {
     case 'cloneFrame':
+      console.log('Cloning frame...');
       if (selection.length > 0) {
         const node = selection[0];
+        console.log('Selected node:', node);
         if ('clone' in node) {
           const clone = node.clone();
           // Position the clone next to the original
@@ -39,17 +111,25 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
           if (node.parent) {
             node.parent.appendChild(clone);
           }
+          console.log('Frame cloned successfully');
+        } else {
+          console.log('Selected node cannot be cloned');
         }
+      } else {
+        console.log('No selection found');
       }
       break;
 
     case 'createVariant':
+      console.log('Creating variant...');
       if (selection.length > 0) {
         const node = selection[0];
         const { variantName } = command.metadata;
+        console.log('Creating variant with name:', variantName);
         
         // If selected node is already a component
         if (node.type === 'COMPONENT') {
+          console.log('Selected node is a component');
           // Create a new component with the same properties
           const variant = figma.createComponent();
           
@@ -76,8 +156,10 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
               const componentSet = figma.combineAsVariants([node, variant], node.parent);
               componentSet.name = node.name.split('=')[0]; // Use base name for component set
             }
+            console.log('Variant created successfully');
           }
         } else {
+          console.log('Selected node is not a component, creating new component');
           // Create a new component from non-component node
           const component = figma.createComponent();
           
@@ -95,12 +177,16 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
             
             // Set the variant name
             component.name = variantName;
+            console.log('New component created successfully');
           }
         }
+      } else {
+        console.log('No selection found');
       }
       break;
 
     case 'convertToComponent':
+      console.log('Converting to component...');
       if (selection.length > 0) {
         const node = selection[0];
         if ('width' in node && 'height' in node && 'x' in node && 'y' in node) {
@@ -116,23 +202,34 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
               component.appendChild(selectedNode);
             }
           });
+          console.log('Converted to component successfully');
         }
+      } else {
+        console.log('No selection found');
       }
       break;
 
     case 'setInstanceProperty':
+      console.log('Setting instance property...');
       if (selection.length > 0) {
         const node = selection[0];
         if ('setProperties' in node) {
           const { property, value } = command.metadata;
           node.setProperties({ [property]: value });
+          console.log('Property set successfully:', property, value);
+        } else {
+          console.log('Selected node does not support properties');
         }
+      } else {
+        console.log('No selection found');
       }
       break;
 
     case 'setVariable':
+      console.log('Setting variable...');
       if (selection.length > 0) {
         const { key, value } = command.metadata;
+        console.log('Setting variable:', key, value);
         selection.forEach(node => {
           if ('boundVariables' in node) {
             // Find the variable by key
@@ -143,6 +240,7 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
                 .find(v => v?.name === key);
               
               if (variable) {
+                console.log('Found variable:', variable.name);
                 // Get the default mode ID
                 const modeId = collection.defaultModeId;
                 
@@ -153,11 +251,22 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
                 if (node.type === 'INSTANCE') {
                   // Pass the variable directly to setBoundVariable
                   node.setBoundVariable(key as VariableBindableNodeField, variable);
+                  console.log('Variable bound successfully');
+                } else {
+                  console.log('Node is not an instance, cannot bind variable');
                 }
+              } else {
+                console.log('Variable not found:', key);
               }
+            } else {
+              console.log('No variable collection found');
             }
+          } else {
+            console.log('Node does not support variables');
           }
         });
+      } else {
+        console.log('No selection found');
       }
       break;
   }
@@ -168,32 +277,62 @@ async function executeAutomatorAction(action: AutomatorAction, selection: readon
   }
 }
 
+console.log('Plugin code loaded');
+
 figma.showUI(`<script>window.location.href = '${SITE_URL}'</script>`, {
   width: 700,
   height: 700,
 });
 
-figma.ui.onmessage = async (message, props) => {
-  if (props.origin !== SITE_URL) {
-    return;
-  }
+// Function to send message to UI
+function sendToUI(message: any) {
+  figma.ui.postMessage(message);
+}
+
+// Listen for selection changes
+figma.on('selectionchange', () => {
+  console.log('Selection changed');
+  const selectionInfo = getSelectionInfo();
+  sendToUI({
+    type: 'SELECTION_CHANGED',
+    selection: selectionInfo,
+  });
+});
+
+figma.ui.onmessage = async (message) => {
+  console.log('Received message:', message);
 
   switch (message.type) {
+    case "GET_SELECTION": {
+      console.log('Getting selection info');
+      const selectionInfo = getSelectionInfo();
+      console.log('Selection info:', selectionInfo);
+      sendToUI({
+        type: 'SELECTION_INFO',
+        selection: selectionInfo,
+      });
+      break;
+    }
+
     case "EXECUTE_AUTOMATOR": {
+      console.log('Executing automator script:', message.script);
       try {
         const script: AutomatorScript = message.script;
         const selection = figma.currentPage.selection;
+        console.log('Current selection:', selection);
 
         for (const action of script.actions) {
           await executeAutomatorAction(action, selection);
         }
 
-        figma.ui.postMessage({
+        console.log('Script execution completed');
+        sendToUI({
           type: "AUTOMATOR_COMPLETE",
           id: message.id,
         });
       } catch (e) {
-        figma.ui.postMessage({
+        console.error('Script execution failed:', e);
+        sendToUI({
           type: "AUTOMATOR_ERROR",
           error: e instanceof Error ? e.message : String(e),
           id: message.id,

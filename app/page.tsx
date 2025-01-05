@@ -18,6 +18,15 @@ interface AutomatorScript {
   createdAt: number
 }
 
+interface SelectionInfo {
+  count: number
+  items: any[]
+  page: {
+    name: string
+    id: string
+  }
+}
+
 // Simple markdown-like formatting
 function formatMessage(content: string): string {
   return content
@@ -29,16 +38,20 @@ function formatMessage(content: string): string {
 }
 
 export default function Home() {
-  const [scriptToExecute, setScriptToExecute] = useState<AutomatorScript | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [lastExecutedId, setLastExecutedId] = useState<string | null>(null)
+  const [selection, setSelection] = useState<SelectionInfo | null>(null)
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
+    body: {
+      selection // Include selection info in the chat request
+    },
     onFinish: (message) => {
       // Try to parse the message as an Automator script
       try {
         const possibleScript = JSON.parse(message.content);
         if (possibleScript.actions && Array.isArray(possibleScript.actions)) {
-          setScriptToExecute(possibleScript);
+          console.log('Found script in message:', possibleScript)
         }
       } catch (e) {
         // Not a JSON message, ignore
@@ -46,42 +59,48 @@ export default function Home() {
     }
   });
 
-  // Scroll to bottom whenever messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  // Function to check if a string is valid JSON
-  const isJsonString = (str: string) => {
-    try {
-      const json = JSON.parse(str)
-      return json && typeof json === 'object'
-    } catch (e) {
-      return false
-    }
-  }
+  // Function to send message to plugin
+  const sendToPlugin = (message: any) => {
+    parent.postMessage({ 
+      pluginMessage: message,
+      pluginId: '*'  // Allow any plugin to receive the message
+    }, '*');
+  };
 
   // Function to execute Automator script
-  const executeAutomatorScript = (script: AutomatorScript) => {
-    // Post message to Figma plugin
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: 'EXECUTE_AUTOMATOR',
-          script,
-          id: script.id,
-        },
-      },
-      '*'
-    )
+  const executeAutomatorScript = (script: any) => {
+    console.log('Executing script in UI:', script);
+    sendToPlugin({
+      type: 'EXECUTE_AUTOMATOR',
+      script,
+      id: script.id,
+    });
   }
 
-  // Handle messages from Figma plugin
+  // Request selection info when needed
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    if (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection')) {
+      console.log('Requesting selection info...');
+      sendToPlugin({ type: 'GET_SELECTION' });
+    }
+  }, [input]);
+
+  // Handle messages from the plugin
+  useEffect(() => {
+    const handlePluginMessage = (event: MessageEvent) => {
+      console.log('Received plugin message:', event.data.pluginMessage);
       if (event.data.pluginMessage) {
-        const { type, error } = event.data.pluginMessage
-        if (type === 'AUTOMATOR_ERROR') {
+        const { type, selection: selectionData, error, id } = event.data.pluginMessage
+        if (type === 'SELECTION_CHANGED' || type === 'SELECTION_INFO') {
+          console.log('Setting selection data:', selectionData);
+          setSelection(selectionData);
+          
+          // If this was in response to a selection query, submit the message
+          if (type === 'SELECTION_INFO' && 
+              (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection'))) {
+            handleSubmit(new Event('submit') as any);
+          }
+        } else if (type === 'AUTOMATOR_ERROR') {
           console.error('Automator error:', error)
           // Handle error (could add to messages or show a notification)
         } else if (type === 'AUTOMATOR_COMPLETE') {
@@ -89,46 +108,70 @@ export default function Home() {
           // Handle success
         }
       }
-    }
+    };
 
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
+    window.addEventListener('message', handlePluginMessage);
+    return () => window.removeEventListener('message', handlePluginMessage);
+  }, [input, handleSubmit]);
 
-  // Custom submit handler to check for Automator scripts
-  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    handleSubmit(e)
-
-    // Get the last assistant message after a short delay to allow for the response
-    setTimeout(() => {
+  // Watch for new messages and execute scripts
+  useEffect(() => {
+    if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1]
       if (lastMessage?.role === 'assistant' && lastMessage.content) {
-        // Check if the message content is a valid JSON
-        if (isJsonString(lastMessage.content)) {
-          try {
-            const script = JSON.parse(lastMessage.content) as AutomatorScript
-            if (script.actions && Array.isArray(script.actions)) {
-              executeAutomatorScript(script)
+        console.log('Raw message content:', lastMessage.content);
+        
+        try {
+          // First try direct JSON parse
+          const contentObj = JSON.parse(lastMessage.content.trim());
+          console.log('Successfully parsed JSON:', contentObj);
+          
+          if (contentObj.actions?.[0]?.command?.name) {
+            console.log('Executing Automator script...');
+            executeAutomatorScript(contentObj);
+            return;
+          }
+        } catch (e) {
+          console.log('Direct JSON parse failed, trying to extract JSON...');
+          
+          // Try to extract JSON from the message
+          const jsonMatch = lastMessage.content.match(/```json\n?(.*?)\n?```/s) || 
+                           lastMessage.content.match(/\{[\s\S]*\}/);
+          
+          if (jsonMatch) {
+            try {
+              const jsonContent = jsonMatch[1] || jsonMatch[0];
+              console.log('Extracted JSON string:', jsonContent);
+              
+              const contentObj = JSON.parse(jsonContent.trim());
+              console.log('Parsed extracted JSON:', contentObj);
+              
+              if (contentObj.actions?.[0]?.command?.name) {
+                console.log('Executing extracted Automator script...');
+                executeAutomatorScript(contentObj);
+              } else {
+                console.log('Extracted JSON is not a valid Automator script:', contentObj);
+              }
+            } catch (e) {
+              console.error('Failed to parse extracted JSON:', e);
             }
-          } catch (error) {
-            console.error('Failed to parse or execute Automator script:', error)
+          } else {
+            console.log('No JSON found in message');
           }
         }
       }
-    }, 100) // Small delay to ensure the message has been added
-  }
-
-  const executeScript = () => {
-    if (scriptToExecute) {
-      parent.postMessage({ pluginMessage: { 
-        type: 'EXECUTE_AUTOMATOR',
-        script: scriptToExecute,
-        id: Date.now().toString()
-      } }, '*');
-      setScriptToExecute(null);
     }
-  };
+  }, [messages]);
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    handleSubmit(e)
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white">
@@ -176,21 +219,6 @@ export default function Home() {
           <div ref={messagesEndRef} />
         </div>
 
-        {scriptToExecute && (
-          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4">
-            <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
-              <div className="font-medium mb-2">Automator Script Ready</div>
-              <p className="text-sm mb-4">A script has been generated to perform your requested actions.</p>
-              <button
-                onClick={executeScript}
-                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-50 transition-colors"
-              >
-                Execute Script
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="fixed bottom-0 left-0 w-full bg-gray-800 p-4">
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleChatSubmit} className="flex flex-col space-y-4">
@@ -199,6 +227,7 @@ export default function Home() {
                 value={input}
                 placeholder="Ask about design tokens, component architecture, or request Figma actions..."
                 onChange={handleInputChange}
+                disabled={isLoading}
               />
               <div className="flex justify-end">
                 <button
@@ -226,5 +255,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  );
+  )
 }
