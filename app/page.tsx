@@ -5,8 +5,19 @@ import { useEffect, useRef, useState } from 'react'
 
 interface Message {
   id: string
-  content: string
   role: 'user' | 'assistant'
+  content: string
+}
+
+interface SelectionInfo {
+  count: number
+  items: any[]
+  page: {
+    id: string
+    name: string
+    type: string
+    childCount: number
+  }
 }
 
 interface AutomatorScript {
@@ -18,44 +29,14 @@ interface AutomatorScript {
   createdAt: number
 }
 
-interface SelectionInfo {
-  count: number
-  items: any[]
-  page: {
-    name: string
-    id: string
-  }
-}
-
-// Simple markdown-like formatting
-function formatMessage(content: string): string {
-  return content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/```([^]*?)```/g, '<pre><code>$1</code></pre>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>')
-}
-
 export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [lastExecutedId, setLastExecutedId] = useState<string | null>(null)
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, setInput, isLoading, handleSubmit } = useChat({
     api: '/api/chat',
     body: {
       selection // Include selection info in the chat request
-    },
-    onFinish: (message) => {
-      // Try to parse the message as an Automator script
-      try {
-        const possibleScript = JSON.parse(message.content);
-        if (possibleScript.actions && Array.isArray(possibleScript.actions)) {
-          console.log('Found script in message:', possibleScript)
-        }
-      } catch (e) {
-        // Not a JSON message, ignore
-      }
     }
   });
 
@@ -77,42 +58,43 @@ export default function Home() {
     });
   }
 
-  // Request selection info when needed
-  useEffect(() => {
+  // Check for selection-related queries before submitting
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
     if (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection')) {
       console.log('Requesting selection info...');
       sendToPlugin({ type: 'GET_SELECTION' });
     }
-  }, [input]);
+
+    // Use the built-in handleSubmit from useChat
+    handleSubmit(e);
+  };
 
   // Handle messages from the plugin
   useEffect(() => {
-    const handlePluginMessage = (event: MessageEvent) => {
-      console.log('Received plugin message:', event.data.pluginMessage);
-      if (event.data.pluginMessage) {
-        const { type, selection: selectionData, error, id } = event.data.pluginMessage
-        if (type === 'SELECTION_CHANGED' || type === 'SELECTION_INFO') {
-          console.log('Setting selection data:', selectionData);
-          setSelection(selectionData);
-          
-          // If this was in response to a selection query, submit the message
-          if (type === 'SELECTION_INFO' && 
-              (input.toLowerCase().includes('selected') || input.toLowerCase().includes('selection'))) {
-            handleSubmit(new Event('submit') as any);
-          }
-        } else if (type === 'AUTOMATOR_ERROR') {
-          console.error('Automator error:', error)
-          // Handle error (could add to messages or show a notification)
-        } else if (type === 'AUTOMATOR_COMPLETE') {
-          console.log('Automator script completed successfully')
-          // Handle success
-        }
+    const handleMessage = (event: MessageEvent) => {
+      const message = event.data.pluginMessage;
+      if (!message) return;
+
+      console.log('Received plugin message:', message);
+
+      if (message.type === 'SELECTION_INFO' || message.type === 'SELECTION_CHANGED') {
+        console.log('Setting selection data:', message.selection);
+        setSelection(message.selection);
+      } else if (message.type === 'AUTOMATOR_ERROR') {
+        console.error('Automator error:', message.error)
+        // Handle error (could add to messages or show a notification)
+      } else if (message.type === 'AUTOMATOR_COMPLETE') {
+        console.log('Automator script completed successfully')
+        // Handle success
       }
     };
 
-    window.addEventListener('message', handlePluginMessage);
-    return () => window.removeEventListener('message', handlePluginMessage);
-  }, [input, handleSubmit]);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   // Watch for new messages and execute scripts
   useEffect(() => {
@@ -163,15 +145,10 @@ export default function Home() {
     }
   }, [messages]);
 
-  // Scroll to bottom whenever messages change
+  // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    handleSubmit(e)
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white">
@@ -211,7 +188,7 @@ export default function Home() {
                 </div>
                 <div 
                   className="prose prose-invert"
-                  dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                  dangerouslySetInnerHTML={{ __html: message.content }}
                 />
               </div>
             </div>
@@ -221,12 +198,12 @@ export default function Home() {
 
         <div className="fixed bottom-0 left-0 w-full bg-gray-800 p-4">
           <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleChatSubmit} className="flex flex-col space-y-4">
+            <form onSubmit={handleFormSubmit} className="flex flex-col space-y-4">
               <input
                 className="w-full rounded-md p-4 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={input}
                 placeholder="Ask about design tokens, component architecture, or request Figma actions..."
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
               />
               <div className="flex justify-end">
