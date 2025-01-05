@@ -15,6 +15,7 @@
   "dependencies": {
     "@figma/plugin-typings": "*",
     "@google/generative-ai": "^0.1.3",
+    "@mem0/vercel-ai-provider": "^0.0.10",
     "@types/node": "20.4.2",
     "@types/react": "18.2.15",
     "@types/react-dom": "18.2.7",
@@ -23,6 +24,7 @@
     "esbuild": "^0.18.12",
     "eslint": "8.45.0",
     "eslint-config-next": "13.4.10",
+    "mem0ai": "^1.0.30",
     "next": "^13.5.8",
     "openai-edge": "^1.2.0",
     "postcss": "8.4.26",
@@ -38,5 +40,6 @@
   },
   "config": {
     "siteURL": "https://test-ai-plugin-template.vercel.app/"
-  }
+  },
+  "packageManager": "pnpm@9.14.4+sha1.64b6e81e79630419b675c555ef3b65607cfd6315"
 }
